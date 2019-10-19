@@ -1,6 +1,9 @@
-//after that, build scorekeeper
-
+//for QuizUI styling issue - try keeping an object of classNames for each button, where the className of each button is defined by referencing its key as a key of the object
+//handleClick will then append "incorrect" or "correct" to that key, thus adding the className to the button. Should clear out as is when this.state.init
 //in CSS, style all buttons as blue, but classNames "incorrect" and "correct" red and green, respectively
+//also, "displayAllPossible" checkbox not adjusting properly for mode changes
+
+//after that, build scorekeeper
 //build the design itself (settings on left, buttons and score in middle, possible chords on right, boxes) - find out where the html/css being referenced in this is
 //after that, have an about page with link to personal website
 //after that, deploy and debug
@@ -738,6 +741,9 @@ class Quiz extends React.Component {
         <button id='get-new-chords' onClick={this.handleGetNewChords}>Get new chords</button>
         <button id='stop' onClick={this.handleStop}>Stop</button>
         <div id='test-chord-display'>
+          {//this.state.chords.map(function(a) {
+            //return <h4 key={intToChordName(a)}>{intToChordName(a)}</h4>
+          }//)}
         </div>
         <div id='QuizUI'>
           <QuizUI chords = {this.state.chords}
@@ -755,29 +761,14 @@ class Quiz extends React.Component {
   };
 };
 
-function CorrectButton(props) {
-  //console.log('props.value for ' + props.chordName + ':');
-  //console.log(props.value);
-  if (Number(props.value) === 0) {
-    return <button className='chordButton correct' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)} disabled>{props.chordName}</button>;
-  } else {
-    return <button className={props.clicked ? 'chordButton correct' : 'chordButton'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>;
-  };
-};
-
-function IncorrectButton(props) {
-  //console.log('props.clicked:');
-  //console.log(props.clicked);
-  return <button className={props.clicked ? 'chordButton incorrect' : 'chordButton'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>
-};
-
 class QuizUI extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      clicked: {} //will contain cumbersome array of styling for each button element, generated with getButtons
+      buttonStyling: {} //will contain cumbersome array of styling for each button element, generated with getButtons
     };
-    this.makeClicked = this.makeClicked.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.handleButtonStyling = this.handleButtonStyling.bind(this);
     this.getButtons = this.getButtons.bind(this);
     this.cleanChordNameData = this.cleanChordNameData.bind(this);
     //variables
@@ -789,28 +780,38 @@ class QuizUI extends React.Component {
 
     this.buttonArray = []; //stores all buttons as html in an array where each row is a sublist
 
-    this.clicked = {}; //will be an object that indicates whether each button has been clicked or not, temp hold in processing, passed to state at end, referenced in the button components
+    this.buttonStyling = {}; //yeesh, this is going to store the correct style for each button. convoluted solution, try to find better
   };
   //methods
 
   componentDidUpdate() {
     if (this.props.init) {
       this.buttonArray = []; //clear out button html and styles
-      this.clicked = {};
+      this.buttonStyling = {};
     };
   };
 
-  makeClicked(e) {
-    //console.log('makeClicked running with:');
-    //console.log(e.target.value);
-    this.clicked[e.target.value] = true;
-    //console.log('this.clicked:');
-    //console.log(this.clicked);
-    this.setState({clicked: this.clicked});
+  handleClick(e) {
+    if (e.target.className.includes("incorrect")) {
+      this.buttonStyling[e.target.value] = {backgroundColor: 'red'};
+    } else if (e.target.className.includes('correct')) {
+      this.buttonStyling[e.target.value] = {backgroundColor: 'green'};
+    };
+    //console.log('setState inside handleClick');
+    this.setState({
+      buttonStyling: this.buttonStyling
+    });
+    console.log('new button style for ' + e.target.value + ':');
+    console.log(this.buttonStyling[e.target.value]);
   };
 
+  handleButtonStyling(e) {
+    console.log('what handleButtonStyling is returning:');
+    console.log(this.state.buttonStyling[e.target.value]);
+    return this.state.buttonStyling[e.target.value] ? this.state.buttonStyling[e.target.value] : {backgroundColor: 'blue'}; //e.target.value is an integer where the first digit represents the button's row, 2nd reps its spot
+  }; //if state hasn't been set yet in getButtons, button is blue
+
   cleanChordNameData() {
-    this.newAllowedList = this.props.chordsAllowed; //make sure this.newAllowedList tracks changing props
     this.newAllowedList.sort(function(a,b) { //always list possible chords in ascending order
       return a.name - b.name;
     });
@@ -835,22 +836,29 @@ class QuizUI extends React.Component {
     //console.log(this.possibleChordNames);
   };
 
-  getButtons() {
-    //this.cleanChordNameData();
-    this.clicked = {};
-    if (this.props.chords.length > 0 && Object.keys(this.buttonArray).length < 1) { //only do all this stuff if we actually have chords and not buttons, could possibly reduce this to if this.props.init
+  getButtons() { //creates an array of buttons, with each item being an array of button html contained with a div, that constitutes a row
+    console.log('calling cleanChordNameData from getButtons');
+    this.cleanChordNameData();
+    if (this.props.chords.length > 0 && Object.keys(this.buttonStyling).length < 1) { //only do all this stuff if we actually have chords and not buttons
       console.log('if statement inside getButtons is executing');
-      var actualChordNames = this.actualChordNames; //loses access to this inside callbacks
-      for (var i = 0; i <this.actualChordNames.length; i++) {
-        var tempButtonList = []; //will hold a list of objects where each object is a button with an integer value representing position and two props, chordName and a boolean indicating whether or not answer is correct, and value, used for element key and for style reference
-        var j = 0; //j indicates button's placement in row with zero indexing
+      var actualChordNames = this.actualChordNames; //again, loses access to this inside callbacks
 
-        this.clicked[i] = false;
-        tempButtonList.push({chordName: actualChordNames[i], correct: true, value: (i)}); // generate correct answers, value should always be single digit
+      for (var i = 0; i < this.actualChordNames.length; i++) { //this code will generate necessary amount of rows with answer and 1-3 (depending on how many allowed chords) wrong answers, stored in buttonArray
+        var tempButtonList = [];
+        var tempColor = {};
+        if (i === 0) {
+          tempButtonList.push(<button className='chordButton correct' style={{backgroundColor: 'green'}}>{this.actualChordNames[i]}</button>);
+        } else {
+          this.buttonStyling[i] = {backgroundColor: 'blue'};
+          console.log(this.buttonStyling[i]);
+          tempButtonList.push(<button className='chordButton correct' style={{backgroundColor: 'blue'}} value={i} key={i} onClick={(e) => this.handleClick(e)}>{this.actualChordNames[i]}</button>); //put answer in row
+        };
+
 
         var answerlessAllowed = this.possibleChordNames.filter(function(a) { //create list without correct answer from all possible chords to generate wrong answers from
           return a !== actualChordNames[i];
         });
+
         var incorrectAmount;
         var random;
 
@@ -860,42 +868,44 @@ class QuizUI extends React.Component {
           incorrectAmount = this.possibleChordNames.length - 1;
         };
 
-        if (i > 0) {
-          for (j; j < incorrectAmount; j++) { //generate incorrect answers
-            this.clicked[10 * i + j] = false;
+        if (i > 0) { //don't add incorrect answers on the first chord, because it's always a given that it is a one chord
+          for (var j = 0; j < incorrectAmount; j++) {
+            this.buttonStyling[10 * i + j] = {backgroundColor: 'blue'};
+            console.log(this.buttonStyling[10 * i + j]);
             random = Math.floor(Math.random() * answerlessAllowed.length); //index of random chord
-            tempButtonList.push({chordName: answerlessAllowed[random], correct: false, value: (10 * i + j)});
+            tempButtonList.push(<button className='chordButton incorrect' style={{backgroundColor: 'blue'}} value={10 * i + j} key={10 * i + j} onClick={(e) => this.handleClick(e)}>{answerlessAllowed[random]}</button>)
             answerlessAllowed.splice(random, 1);
           };
         };
+        //reconstruct tempButtonList here with shuffle using random splicing, then push
+        this.buttonArray[i] = <div key={(i * 10).toString()}>{tempButtonList}</div>;
+      };
 
-      //randomize row here before pushing
-      this.buttonArray.push(tempButtonList); //each list of objects represents a row and will be rendered wrapped in a div to ensure proper styling
+      if (i === this.actualChordNames.length && j === incorrectAmount && this.state.buttonStyling !== this.buttonStyling) { //if the for loop has created all buttons and setState hasn't already been called on completion
+        console.log('setState inside getButtons');
+        this.setState({
+          buttonStyling: this.buttonStyling
+        });
       };
     };
   };
 
-
-
   componentDidUpdate() { //putting getButtons here instead of under render
-    //console.log('componentDidUpdate, calling getButtons');
+    console.log('componentDidUpdate, calling getButtons');
     if (this.props.init) { //if init from main component, clear out buttons and styles
-      this.clicked = {};
+      this.buttonStyling = {};
       this.buttonArray = [];
     };
-    //console.log('testing if propositions in cDU');
-    //console.log(this.props.chords.length);
-    //console.log(Object.keys(this.buttonStyling).length);
-    if (this.props.chords.length > 0 && this.buttonArray.length < 1) {
-      this.cleanChordNameData();
+    console.log('testing if propositions in cDU');
+    console.log(this.props.chords.length);
+    console.log(Object.keys(this.buttonStyling).length);
+    if (this.props.chords.length > 0 && Object.keys(this.buttonStyling).length < 1) {
       this.getButtons();
     };
   };
 
   render() {
     //this.cleanChordNameData();
-    //console.log('this.buttonArray');
-    //console.log(this.buttonArray);
     return (
       <div>
         <div id='possibleChordDiv'>
@@ -908,16 +918,9 @@ class QuizUI extends React.Component {
           })}
         </div>
         <div id='buttons'>
-          {
-            this.buttonArray.map(row =>
-              <div className='buttonRow'>
-                {row.map(chord => chord.correct ?
-                  <CorrectButton key={chord.value} value={chord.value} clicked={this.clicked[chord.value]} makeClicked={this.makeClicked} chordName={chord.chordName} /> :
-                  <IncorrectButton key={chord.value} value={chord.value} clicked={this.clicked[chord.value]} makeClicked={this.makeClicked} chordName={chord.chordName}/>
-                )}
-              </div>
-            )
-          }
+          {this.buttonArray.map(function(a) {
+            return a;
+          })}
         </div>
       </div>
     );
