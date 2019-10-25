@@ -1,19 +1,12 @@
-//after that, build scorekeeper
-
-//in CSS, style all buttons as blue, but classNames "incorrect" and "correct" red and green, respectively
-//build the design itself (settings on left, buttons and score in middle, possible chords on right, boxes) - find out where the html/css being referenced in this is
-//after that, have an about page with link to personal website
-//after that, deploy and debug
-
-
-//eventually, allow borrowing from parallel major and minor if major/minor selected
-// - would involve making minor triad chord sound files (already did sevenths) for parallel minor. maybe eventually, but finish your app first
-//eventually, add a little reverb with audioContext.createConvolver
-//eventually, don't immediately stop chords and playback on settings changes?
+//wish list:
+//allow switching between parallel major and minor (would involve restructuring some code and generating new chords)
+//add all triadic inversions (sevenths are fine) for best voice leading
+//add some reverb to all the audio context so that chord cut offs aren't so abrupt (check audioContext.createConvolver in three.js docs)
 
 import React from 'react';
 import ReactDOM from 'react-dom';
 import * as THREE from "three";
+import './index.css'
 
 //all samples 1.56 sec (whole notes at 154 bpm), C and D in 1st inv higher, E - A second inversion, Bdim first inversion
 const soundbank = [
@@ -136,7 +129,7 @@ const soundbank = [
       inverted: {
         value: 11,
         src: './chords/Gmaj_inv.mp3',
-        srcMinor: './chords_Gsharpdim_inv.mp3'
+        srcMinor: './chords/Gsharpdim_inv.mp3'
         },
     },
     seventh: {
@@ -249,14 +242,13 @@ class Quiz extends React.Component {
     super(props);
     this.state = {
       chords: [], //list of chosen chords (objects from soundbank var)
-      //chordsAllowed: [], //which chords can be chosen from, as dictated by user
       transpositions: false,
       inversions: false,
       chordClass: 'triad', //triad or seventh, see soundbank chord object props and relevant logic in getChords
       allowedList: [1], //keeps track of which chords are allowed, accomodating for mode change, used in handleTypeChange to recalculate allowed chords
       stop: false, //when this is true, stops any playback on next chord, set to true when chords are cleared out or stop button pressed, set to false when play
       loop: false,
-      minor: false, //only with tonal minor, not minor modes, includes altered 5 and 7 chords
+      minor: false, //true only with tonal minor, not minor modes, indicates use of altered 5 and 7 chords
       modal: 0, //integer with which to rename chords (in Dorian, two becomes the one, etc.)
       amount: 2, //amount of chords to be heard by user, selected with dropdown
       init: true, //if chords have not been gotten yet, useful to ensure "hear chord" button both generates chords on first click and replays them on second click
@@ -278,24 +270,21 @@ class Quiz extends React.Component {
     this.handleDisplayPossible = this.handleDisplayPossible.bind(this);
     this.playMusic = this.playMusic.bind(this);
     //variables with "global" access (within component)
-    this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on stop
+    this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on this.state.stop
     this.listener = new THREE.AudioListener();
     this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
-    this.detuneValue = 0; //used to detune audio
+    this.detuneValue = 0; //used to detune audio to enable transpositions
     this.count = 0; //count will be used to keep track of how many chords have played, function playMusic clears intervalID when count === this.state.amount
     this.chordsAllowed = [soundbank[0]];
 
   };
 
   componentDidUpdate() {
-    //console.log('update');
     if (this.state.chords.length > 1 && this.state.play) { //this is not ideal, try to find a better way to do renderMusic
       //call renderMusic from getChords with some kind of awaiting state update promise to fix this
-      //console.log('renderMusic and thus playMusic called from 283 (within componentDidUpdate)');
       this.renderMusic();
     };
     if (this.state.stop) {
-      //not a function?
       if (this.sound) {
         this.sound.stop();
       };
@@ -312,7 +301,6 @@ class Quiz extends React.Component {
   //HANDLERS FOR SETTING CHANGES
 
   handleTypeChange(e) {
-
     var tempAllowedList = this.state.allowedList; //ensure global access within function
     var modal;
     if (e.target.value === 'major') {
@@ -325,8 +313,6 @@ class Quiz extends React.Component {
       });
       modal = 0;
     } else if (e.target.value ==='minor') {
-      //special processing, probably make this.state.modal === 2 and then include whatever will be necessary to accomodate dom7 and diminished 7th chords
-      //maybe include altered versions of those chords for minor (E major with inversions, G also includes Gsharp diminished, seventh chords for the sevenths)
       this.setState({
         modal: 2,
         minor: true,
@@ -335,7 +321,7 @@ class Quiz extends React.Component {
         stop: true
       });
       modal = 2;
-    } else { //modal, e.target.value is a number used for processing names to accomodate new "one"
+    } else {
       this.setState({
         modal: Number(e.target.value),
         minor: false,
@@ -346,33 +332,27 @@ class Quiz extends React.Component {
       modal = Number(e.target.value);
     };
     this.chordsAllowed = []; //remove all previous chords and remake list with respect to new mode
+
     for (var i = 0; i < tempAllowedList.length; i++) {
       var tempChord = {};
-      Object.assign(tempChord, soundbank.find(function(obj) { //deep copy
-        var tempName = (tempAllowedList[i] + 7 - modal) % 7; //convoluted math converts the number chord with respect to new tonic to the "originally named" chord as held in soundbank
+      Object.assign(tempChord, soundbank.find(function(obj) { //deep copy of object is necessary so you aren't altering the original soundbank
+        var tempName = (tempAllowedList[i] + 7 - modal) % 7; //converts the number chord with respect to new tonic to the "originally named" chord as held in soundbank
         if (tempName === 0) {
           tempName = 7;
         };
-        //console.log('tempName: ' + tempName);
         return obj.name === tempName;
       }));
-      //console.log('on mode change - chord to be added to this.chordsAllowed:');
-      //console.log(tempChord);
-      tempChord.name = tempAllowedList[i]; //rename chord to accomodate mode - NOTE: this will not alter soundbank only because of Object.assign earlier, need deep copy
+      tempChord.name = tempAllowedList[i];
       this.chordsAllowed.push(tempChord);
     };
-    //console.log('chords allowed after mode change:');
-    //console.log(this.chordsAllowed);
   };
 
   handleAmountChange(e) {
-    //updates the amount of chords user wants to hear (also responsible for rendering selected radio button correctly)
-    //this.audioElements = []; //clearing audio refs for next set of chords
     this.setState({
       amount: e.target.value,
       init: true,
       play: false,
-      chords: [], //clearing out chords, which is important for the path of processing with handleClick
+      chords: [], //clearing out chords, note that this is important for the path of processing with handleClick
       stop: true
     });
   };
@@ -385,16 +365,24 @@ class Quiz extends React.Component {
 
   handleInversions() {
     if (!this.state.inversions && (this.state.chords.length > 0)) { //if inversions have just been allowed and we already have chords
-      var chordList = this.state.chords; //semantically easier and will not alter or reference state directly for processing
-      //console.log('chordList (inversions have just been allowed): ');
-      //console.log(chordList);
-      for (var i = 1; i < chordList.length; i++) { //redo chord list to accomodate inversions. Allows the user to hear same chord progression with different settings
+      var chordList = this.state.chords; //to avoid mutating state directly
+      for (var i = 1; i < chordList.length; i++) { //redo chord list to accomodate inversions. Allows the user to hear same chord progression with different settings!
         if (Math.abs(chordList[i][this.state.chordClass].root.value - chordList[i-1].value) <= Math.abs(chordList[i][this.state.chordClass].inverted.value - chordList[i - 1].value)) {
-          chordList[i].src = chordList[i][this.state.chordClass].root.src;
-          chordList[i].value = chordList[i][this.state.chordClass].root.value;
+          if (this.state.minor && (chordList[i].name === 7 || chordList[i].name === 5)) {
+            chordList[i].src = chordList[i][this.state.chordClass].root.srcMinor;
+            chordList[i].value = chordList[i][this.state.chordClass].root.value;
+          } else {
+            chordList[i].src = chordList[i][this.state.chordClass].root.src;
+            chordList[i].value = chordList[i][this.state.chordClass].root.value;
+          };
         } else {
-          chordList[i].src = chordList[i][this.state.chordClass].inverted.src;
-          chordList[i].value = chordList[i][this.state.chordClass].inverted.value;
+          if (this.state.minor && (chordList[i].name === 7 || chordList[i].name === 5)) {
+            chordList[i].src = chordList[i][this.state.chordClass].inverted.srcMinor;
+            chordList[i].value = chordList[i][this.state.chordClass].inverted.value;
+          } else {
+            chordList[i].src = chordList[i][this.state.chordClass].inverted.src;
+            chordList[i].value = chordList[i][this.state.chordClass].inverted.value;
+          };
         };
       };
       this.setState({
@@ -402,11 +390,14 @@ class Quiz extends React.Component {
       });
     } else if (this.state.inversions && (this.state.chords.length > 0)) { //if inversions have just been prohibited and we already have chords
       var chordList = this.state.chords;
-      //console.log('chordList (inversions have just been prohibited): ');
-      //console.log(chordList);
       for (var i = 1; i < chordList.length; i++) { //chord list is remade with root position instead
-        chordList[i].src = chordList[i][this.state.chordClass].root.src;
-        chordList[i].value = chordList[i][this.state.chordClass].root.value; //we probably don't need value when only using root position, but keeping it just to be consistent
+        if (this.state.minor && (chordList[i].name === 7 || chordList[i].name === 5)) {
+          chordList[i].src = chordList[i][this.state.chordClass].root.srcMinor;
+          chordList[i].value = chordList[i][this.state.chordClass].root.value; //probably don't need to track value in the case of making all chords root position, but doing it just in case
+        } else {
+          chordList[i].src = chordList[i][this.state.chordClass].root.src;
+          chordList[i].value = chordList[i][this.state.chordClass].root.value;
+        };
       };
       this.setState({
         chords: chordList
@@ -419,7 +410,6 @@ class Quiz extends React.Component {
   };
 
   handleSeventhChords(e) {
-    //console.log(e.target.checked);
     if (e.target.checked) {
       this.setState({
         chordClass: 'seventh',
@@ -438,17 +428,12 @@ class Quiz extends React.Component {
   };
 
   handleLoop() {
-    //console.log('this.state.loop should become the opposite of:');
-    //console.log(this.state.loop);
     this.setState({
       loop: !this.state.loop
     });
   };
 
   handleChordAllowedChange(e) {
-    //console.log(e);
-    //console.log(e.target.value);
-    //console.log(e.target.checked);
     this.setState({ //clear out chords because we need a new set, set init to true for processing purposes elsewhere
       chords: [],
       init: true,
@@ -457,7 +442,7 @@ class Quiz extends React.Component {
 
     var modal = this.state.modal;
     var tempChord = soundbank.find(function(obj) {
-      var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved
+      var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved in original soundbank
       if (tempName === 0) { //this code makes that adjustment (duplicated later in the getChords function)
         tempName = 7;
       };
@@ -474,16 +459,15 @@ class Quiz extends React.Component {
       var modal = this.state.modal;
       var tempChord = {};
       Object.assign(tempChord, soundbank.find(function(obj) { //deep copy, very important to avoid mutating soundbank
-        var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved, this code handles that
+        var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved
         if (tempName === 0) {
           tempName = 7;
         };
         return tempName === Number(e.target.value);
       }));
-      tempChord.name = Number(e.target.value); //chords in chordsAllowed are renamed with respect to mode - important for rendering in QuizUI, one line to be careful about touching
+      tempChord.name = Number(e.target.value); //chords in chordsAllowed are renamed with respect to mode - important for rendering correct name in QuizUI section
       this.chordsAllowed.push(tempChord);
-    } else { //else (if chord has been forbidden), remove chord from allowed chords if it is currently in that list (it should always be in the list, just trying to accomodate any weirdness)
-      //console.log('should run on uncheck');
+    } else { //else if chord has been forbidden, remove chord from allowed chords
       var tempIndex = tempAllowedList.indexOf(Number(e.target.value));
       tempAllowedList.splice(tempIndex, 1);
       this.setState({
@@ -494,26 +478,26 @@ class Quiz extends React.Component {
         return obj.name === Number(e.target.value);
       });
       var index = this.chordsAllowed.indexOf(tempChord);
-      //console.log('index of chord to remove: ' + index);
-      if (index !== -1) {
+      if (index !== -1) { //avoiding errors if the disallowed chord was not in allowed list (should never happen, but handling the supposedly impossible case to avoid crashing can't hurt)
         this.chordsAllowed.splice(index, 1);
       };
-      //console.log('this.chordsAllowed:');
     };
-    //console.log(this.chordsAllowed);
   };
 
+  handleDisplayPossible() {
+    this.setState({
+      displayPossible: !this.state.displayPossible
+    });
+  };
+
+  //SOUND BUTTONS
+
   handleClick() {
-    //console.log('allowed list:');
-    //console.log(this.state.allowedList);
     this.setState({
       play: true,
       stop: false
     });
-    //you've decided you only want one button to hear chords - if chords have already been chosen, simply renderMusic. Else, pick chords (which will then call the renderMusic function indirectly)
-    //console.log(this.state.chords);
     if (this.state.chords.length > 0) {
-      //this.audioElements.stop(); <-- you are probably going to need something like the .stop() method from https://developer.mozilla.org/en-US/docs/Web/API/ConstantSourceNode
       this.renderMusic();
     } else {
       this.getChords();
@@ -536,15 +520,9 @@ class Quiz extends React.Component {
     });
   };
 
-  handleDisplayPossible() {
-    this.setState({
-      displayPossible: !this.state.displayPossible
-    });
-  };
-
   getChords() {
     var tempChordHolder = [{}];
-    Object.assign(tempChordHolder[0], soundbank[(7 - this.state.modal) % 7]); //makes a deep copy. VERY IMPORTANT - if you change this make sure you are not merely passing a reference to soundbank obj
+    Object.assign(tempChordHolder[0], soundbank[(7 - this.state.modal) % 7]); //makes a deep copy to avoid mutating original soundbank
     tempChordHolder[0].name = 1; //initialize first chord with root position and value with name 1
     tempChordHolder[0].src = tempChordHolder[0][this.state.chordClass].root.src;
     tempChordHolder[0].value = tempChordHolder[0][this.state.chordClass].root.value;
@@ -552,20 +530,13 @@ class Quiz extends React.Component {
 
     for (var i = 0; i < this.state.amount - 1; i++) {
       var rand = {};
-      Object.assign(rand, this.chordsAllowed[Math.floor(Math.random() * this.chordsAllowed.length)]); //choose random chord from allowedChords, generated from handleChordAllowedChange;
-      //console.log('rand:');
-      //console.log(rand);
-      //finding the min between root and inv, achieving the smoother voice leading. if minor, here is where you would use altered source on rand.name = 3 or 5
-      if (this.state.inversions) {
-        //console.log('first line is difference between root and value of prior, 2nd is diff between inverted and value of prior');
-        //console.log(rand[this.state.chordClass].root.value - tempChordHolder[tempChordHolder.length - 1].value);
-        //console.log((rand[this.state.chordClass].inverted.value - tempChordHolder[tempChordHolder.length - 1].value));
+      Object.assign(rand, this.chordsAllowed[Math.floor(Math.random() * this.chordsAllowed.length)]); //choose random chord from allowedChords, generated from handleChordAllowedChange
+      if (this.state.inversions) { //following code finds out which inversion of rand chord is closest to the previous chord in list
         if (Math.abs(rand[this.state.chordClass].root.value - tempChordHolder[tempChordHolder.length - 1].value) <= Math.abs(rand[this.state.chordClass].inverted.value - tempChordHolder[tempChordHolder.length - 1].value)) {
           rand.value = rand[this.state.chordClass].root.value;
           if (this.state.minor && (rand.name === 7 || rand.name === 5)) {
             rand.quality = rand[this.state.chordClass].qualityMinor;
             rand.src = rand[this.state.chordClass].root.srcMinor;
-            //console.log(rand.src);
           } else {
             rand.src = rand[this.state.chordClass].root.src;
             rand.quality = rand[this.state.chordClass].quality;
@@ -575,7 +546,6 @@ class Quiz extends React.Component {
           if (this.state.minor && (rand.name === 7 || rand.name === 5)) {
             rand.quality = rand[this.state.chordClass].qualityMinor;
             rand.src = rand[this.state.chordClass].inverted.srcMinor;
-            //console.log(rand.src);
           } else {
             rand.src = rand[this.state.chordClass].inverted.src;
             rand.quality = rand[this.state.chordClass].quality;
@@ -586,63 +556,47 @@ class Quiz extends React.Component {
         if (this.state.minor && (rand.name === 7 || rand.name === 5)) {
           rand.quality = rand[this.state.chordClass].qualityMinor;
           rand.src = rand[this.state.chordClass].root.srcMinor;
-          //console.log(rand.src);
         } else {
           rand.quality = rand[this.state.chordClass].quality;
           rand.src = rand[this.state.chordClass].root.src;
         };
       };
-      //rename chords if modal (or minor, probably, eventually)
       tempChordHolder.push(rand);
     };
-    //console.log('tempChordHolder list:');
-    //console.log(tempChordHolder);
+
     this.setState({
       chords: tempChordHolder
     });
-
   };
 
   renderMusic() {
-    this.setState({ //why?
+    this.setState({
       play: false
     });
 
-    if (this.state.init) { //broken up into two different if statements because other processing based on init may be possible later
+    if (this.state.init) {
       if (this.state.transpositions) {
-        this.detuneValue = (((Math.floor(Math.random() * 6)) - 3) * 100); //anywhere from -300 to +200 cents
-        //console.log(this.detuneValue);
+        this.detuneValue = (((Math.floor(Math.random() * 6)) - 3) * 100); //anywhere from -300 to +200 cents (3 half steps down to 2 half steps up)
       };
       this.setState({
         init: false
       });
     };
-    //console.log(this.state.chords);
-    //console.log("allowed chords:");
-    //console.log(this.chordsAllowed);
-    //setTimeout(this.playMusic, 150, this.state.amount); <- avoid that fade in issue on loads?
-    //console.log('playmusic called on line 605 (within renderMusic)');
     this.playMusic(this.state.amount);
   };
 
   playMusic(total) {
-    //playback loops for some reason after stop, even with added condition if else if below, function STILL tries to read chords after they've been cleared out. delay with setState?
     if (this.listener.context.state === 'suspended') {
       this.listener.context.resume();
     };
-    //console.log('this.state.chords:');
-    //console.log(this.state.chords);
-    //console.log(this.count);
+
     if (this.count === Number(total)) {
-      //console.log('total and this.count match');
       this.count = 0;
       if (this.state.loop) {
-        //console.log('playmusic called on 621');
         this.playMusic(this.state.amount);
       }
     } else if (this.count >= 0 && !this.state.stop) {
       var url = this.state.chords[this.count].src;
-      //console.log(url);
       this.listener = new THREE.AudioListener();
       this.sound = new THREE.Audio(this.listener);
       if (this.state.transpositions) {
@@ -655,92 +609,118 @@ class Quiz extends React.Component {
   	     tempSound.play();
       });
       this.count++;
-      //console.log('playmusic called on 638 (with timeout within function)');
-      this.timeout = setTimeout(this.playMusic, 1550 - (this.detuneValue/2), this.state.amount); //note: timeout value has to be adjusted according to detune value because detune alters playback speed of chords
-      //console.log('this.timeout:');
-      //console.log(this.timeout);
+
+      if (this.state.transpositions) { //only stagger playback if transpositions are enabled
+        this.timeout = setTimeout(this.playMusic, 1550 - (this.detuneValue/2), this.state.amount); //note: timeout value has to be adjusted according to detune value because detune alters playback speed of chords
+      } else {
+        this.timeout = setTimeout(this.playMusic, 1550, this.state.amount);
+      };
+
     } else {
-      console.log('this.count is less than 0. Something terrible has happened.');
+      console.log('A variable named this.count is less than 0. Something terrible has occured. Please refresh the page and pretend this never happened.');
     };
-    //this.setState({
-      //stop: true
-    //});
   };
 
   render() {
-    //console.log('render');
     return (
-      <div>
-        <h3>Press the button to begin the test</h3>
-        <select onChange={this.handleTypeChange} id='type-selection'>
-          <optgroup label='Keys'>
-            <option value='major' defaultValue>Major</option>
-            <option value='minor'>Minor</option>
-          </optgroup>
-          <optgroup label='Modes'>
-            <option value={6}>Dorian</option>
-            <option value={5}>Phrygian</option>
-            <option value={4}>Lydian</option>
-            <option value={3}>Mixolydian</option>
-            <option value={2}>Aeolian</option>
-            <option value={1}>Locrian</option>
-          </optgroup>
-        </select>
-        <select onChange={this.handleAmountChange} id='amount-selection'>
-          <option value={2}>2</option>
-          <option value={3}>3</option>
-          <option value={4} defaultValue>4</option>
-          <option value={5}>5</option>
-          <option value={6}>6</option>
-          <option value={7}>7</option>
-          <option value={8}>8</option>
-        </select>
-        <div id='allowed-selections'>
-          <h3>Select which chords you want to allow (note that the one chord must be included):</h3>
-          <input type='checkbox' id='allowed-section-1' checked disabled></input>
-          <label htmlFor='allowed-selection-1'>1</label>
-          <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={2} id='allowed-selection-2'></input>
-          <label htmlFor='allowed-selection-2'>2</label>
-          <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={3} id='allowed-selection-3'></input>
-          <label htmlFor='allowed-selection-3'>3</label>
-          <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={4} id='allowed-selection-4'></input>
-          <label htmlFor='allowed-selection-4'>4</label>
-          <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={5} id='allowed-selection-5'></input>
-          <label htmlFor='allowed-selection-5'>5</label>
-          <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={6} id='allowed-selection-6'></input>
-          <label htmlFor='allowed-selection-6'>6</label>
-          <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={7} id='allowed-selection-7'></input>
-          <label htmlFor='allowed-selection-7'>7</label>
-        </div>
-        <div id='checkboxes'>
-          <div className='checkbox'>
-            <input type="checkbox" id="allow-transpositions" name="allow-transpositions" onChange={this.handleTranspositions}></input>
-            <label htmlFor="allow-transpositions">Allow Transpositions</label>
-          </div>
-          <div className='checkbox'>
-            <input type="checkbox" id="allow-inversions" name="allow-inversions" onChange={this.handleInversions}></input>
-            <label htmlFor="allow-transpositions">Allow Inversions</label>
-          </div>
-          <div className='checkbox'>
-            <input type="checkbox" id="use-seventh-chords" name="use-seventh-chords" onChange={(event) => this.handleSeventhChords(event)}></input>
-            <label htmlFor="use-seventh-chords">Use Seventh Chords</label>
-          </div>
-          <div className='checkbox'>
-            <input type="checkbox" id="loop" name="loop" onChange={this.handleLoop}></input>
-            <label htmlFor="loop">Loop Chord Playback</label>
-          </div>
-          <div className='checkbox'>
-            <input type='checkbox' id='displayPossible' name='displayPossible' onChange={this.handleDisplayPossible}></input>
-            <label htmlFor='displayPossible'>Display All Possible Chords</label>
+      <div id='app-wrapper'>
+        <div id='header'>
+          <div id='header-wrapper'>
+            <h3 className='headers' id='title'>Aural Skills Training for Chord Progressions</h3>
+            <h3 className='headers' id='by-line'>Coded by Trevor Smith</h3>
+            <h3 className='headers' id='about'><a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://huntzinger92.github.io/'>About the Author</a></h3>
           </div>
         </div>
-  		  <button id='hear-chords' onClick={this.handleClick}>Hear some chords</button>
-        <button id='get-new-chords' onClick={this.handleGetNewChords}>Get new chords</button>
-        <button id='stop' onClick={this.handleStop}>Stop</button>
-        <div id='test-chord-display'>
+        <div id='settings-wrapper'>
+          <h3 className='settings-label' id='mode-key'>Mode/Key:</h3>
+          <select onChange={this.handleTypeChange} id='type-selection'>
+            <optgroup label='Keys'>
+              <option value='major' defaultValue>Major</option>
+              <option value='minor'>Minor</option>
+            </optgroup>
+            <optgroup label='Modes'>
+              <option value={6}>Dorian</option>
+              <option value={5}>Phrygian</option>
+              <option value={4}>Lydian</option>
+              <option value={3}>Mixolydian</option>
+              <option value={2}>Aeolian</option>
+              <option value={1}>Locrian</option>
+            </optgroup>
+          </select>
+          <h3 className='settings-label'>Amount of Chords:</h3>
+          <select onChange={this.handleAmountChange} id='amount-selection'>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={5}>5</option>
+            <option value={6}>6</option>
+            <option value={7}>7</option>
+            <option value={8}>8</option>
+          </select>
+          <div id='allowed-wrapper'>
+            <h3 id='allowed-header'>Allowed Chords:</h3>
+            <div id='allowed-selections'>
+              <div className='checkbox'>
+                <input type='checkbox' id='allowed-section-1' checked disabled></input>
+                <label htmlFor='allowed-selection-1'>1</label>
+              </div>
+              <div className='checkbox'>
+                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={2} id='allowed-selection-2'></input>
+                <label htmlFor='allowed-selection-2'>2</label>
+              </div>
+              <div className='checkbox'>
+                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={3} id='allowed-selection-3'></input>
+                <label htmlFor='allowed-selection-3'>3</label>
+              </div>
+              <div className='checkbox'>
+                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={4} id='allowed-selection-4'></input>
+                <label htmlFor='allowed-selection-4'>4</label>
+              </div>
+              <div className='checkbox'>
+                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={5} id='allowed-selection-5'></input>
+                <label htmlFor='allowed-selection-5'>5</label>
+              </div>
+              <div className='checkbox'>
+                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={6} id='allowed-selection-6'></input>
+                <label htmlFor='allowed-selection-6'>6</label>
+              </div>
+              <div className='checkbox'>
+                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={7} id='allowed-selection-7'></input>
+                <label htmlFor='allowed-selection-7'>7</label>
+              </div>
+            </div>
+          </div>
+          <div id='assorted-checkboxes'>
+            <div className='checkbox'>
+              <input type="checkbox" id="allow-transpositions" name="allow-transpositions" onChange={this.handleTranspositions}></input>
+              <label htmlFor="allow-transpositions">Allow Transpositions</label>
+            </div>
+            <div className='checkbox'>
+              <input type="checkbox" id="allow-inversions" name="allow-inversions" onChange={this.handleInversions}></input>
+              <label htmlFor="allow-transpositions">Allow Inversions</label>
+            </div>
+            <div className='checkbox'>
+              <input type="checkbox" id="use-seventh-chords" name="use-seventh-chords" onChange={(event) => this.handleSeventhChords(event)}></input>
+              <label htmlFor="use-seventh-chords">Use Seventh Chords</label>
+            </div>
+            <div className='checkbox'>
+              <input type="checkbox" id="loop" name="loop" onChange={this.handleLoop}></input>
+              <label htmlFor="loop">Loop Chord Playback</label>
+            </div>
+            <div className='checkbox'>
+              <input type='checkbox' id='displayPossible' name='displayPossible' onChange={this.handleDisplayPossible}></input>
+              <label htmlFor='displayPossible'>Display All Possible Chords</label>
+            </div>
+          </div>
         </div>
-        <div id='QuizUI'>
-          <QuizUI chords = {this.state.chords}
+        <div id='sec-col-wrapper'>
+          <div id='sound-button-wrapper'>
+  		      <button id='play' className='sound-button' onClick={this.handleClick}>Play</button>
+            <button id='stop' className='sound-button' onClick={this.handleStop}>Stop</button>
+            <button id='get-new-chords' className='sound-button' onClick={this.handleGetNewChords}>Get New Chords</button>
+          </div>
+          <div id='QuizUI'>
+            <QuizUI chords = {this.state.chords}
                   chordsAllowed = {this.chordsAllowed}
                   amount = {this.state.amount}
                   minor = {this.state.minor}
@@ -748,34 +728,30 @@ class Quiz extends React.Component {
                   displayPossible = {this.state.displayPossible}
                   init = {this.state.init}
                   />
+          </div>
         </div>
-
       </div>
     );
   };
 };
 
 function CorrectButton(props) {
-  //console.log('props.value for ' + props.chordName + ':');
-  //console.log(props.value);
   if (Number(props.value) === 0) {
-    return <button className='chordButton correct' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)} disabled>{props.chordName}</button>;
+    return <button className='chord-button correct' id='given-one-chord' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)} disabled>{props.chordName}</button>;
   } else {
-    return <button className={props.clicked ? 'chordButton correct' : 'chordButton'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>;
+    return <button className={props.clicked ? 'chord-button correct' : 'chord-button unanswered'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>;
   };
 };
 
 function IncorrectButton(props) {
-  //console.log('props.clicked:');
-  //console.log(props.clicked);
-  return <button className={props.clicked ? 'chordButton incorrect' : 'chordButton'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>
+  return <button className={props.clicked ? 'chord-button incorrect' : 'chord-button unanswered'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>
 };
 
 class QuizUI extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      clicked: {} //will contain cumbersome array of styling for each button element, generated with getButtons
+      clicked: {} //object with boolean for each button element's clicked state (key is trivial integer value unique to button), passed to button components as prop
     };
     this.makeClicked = this.makeClicked.bind(this);
     this.getButtons = this.getButtons.bind(this);
@@ -785,39 +761,41 @@ class QuizUI extends React.Component {
 
     this.possibleChordNames = []; //names of possible chords, used to generate false answers
 
-    this.actualChordNames = []; //names of sounded chords
+    this.actualChordNames = []; //names of sounded, correct chords
 
-    this.buttonArray = []; //stores all buttons as html in an array where each row is a sublist
+    this.buttonArray = []; //stores all buttons as object where each row of buttons is a sublist, object rendered as html with map in render() below
 
-    this.clicked = {}; //will be an object that indicates whether each button has been clicked or not, temp hold in processing, passed to state at end, referenced in the button components
+    this.clicked = {}; //will be an object that indicates whether each button has been clicked or not, temp hold in processing, passed to state on completion
   };
-  //methods
 
   componentDidUpdate() {
-    if (this.props.init) {
-      this.buttonArray = []; //clear out button html and styles
+
+    if (this.props.init) { //if init from parent component, clear out buttons and styles
       this.clicked = {};
+      this.buttonArray = [];
+      this.cleanChordNameData();
+    };
+
+    if (this.props.chords.length > 0 && this.buttonArray.length < 1) { //if we have chords, but not buttons
+      this.cleanChordNameData();
+      this.getButtons();
     };
   };
 
   makeClicked(e) {
-    //console.log('makeClicked running with:');
-    //console.log(e.target.value);
     this.clicked[e.target.value] = true;
-    //console.log('this.clicked:');
-    //console.log(this.clicked);
     this.setState({clicked: this.clicked});
   };
 
   cleanChordNameData() {
-    this.newAllowedList = this.props.chordsAllowed; //make sure this.newAllowedList tracks changing props
+    this.newAllowedList = this.props.chordsAllowed; //likely redundant, but ensures that this.newAllowedList is always tracking changing prop
     this.newAllowedList.sort(function(a,b) { //always list possible chords in ascending order
       return a.name - b.name;
     });
 
-    var minor = this.props.minor; //for each loses access to this
+    var minor = this.props.minor; //for each callback loses access to this
     var chordClass = this.props.chordClass;
-    this.newAllowedList.forEach(function(chord) { //make sure each entry's quality prop is assigned
+    this.newAllowedList.forEach(function(chord) { //make sure each entry's quality prop is assigned (should already be, but redundancy just in case)
       if (minor && chord[chordClass].qualityMinor) {
         chord.quality = chord[chordClass].qualityMinor;
       } else {
@@ -832,21 +810,17 @@ class QuizUI extends React.Component {
     this.actualChordNames = this.props.chords.map(function(a) {
       return intToChordName(a);
     });
-    //console.log(this.possibleChordNames);
   };
 
   getButtons() {
-    //this.cleanChordNameData();
     this.clicked = {};
-    if (this.props.chords.length > 0 && Object.keys(this.buttonArray).length < 1) { //only do all this stuff if we actually have chords and not buttons, could possibly reduce this to if this.props.init
-      console.log('if statement inside getButtons is executing');
+    if (this.props.chords.length > 0 && Object.keys(this.buttonArray).length < 1) { //only generate buttons if we have chords and not buttons (likely redundant, but trying to be safe)
       var actualChordNames = this.actualChordNames; //loses access to this inside callbacks
       for (var i = 0; i <this.actualChordNames.length; i++) {
-        var tempButtonList = []; //will hold a list of objects where each object is a button with an integer value representing position and two props, chordName and a boolean indicating whether or not answer is correct, and value, used for element key and for style reference
-        var j = 0; //j indicates button's placement in row with zero indexing
+        var tempButtonList = []; //will hold a list of objects where each object is a button with an integer value representing position and two props, chordName, and a boolean indicating whether or not answer is correct, and value, used for element key and for style reference
 
         this.clicked[i] = false;
-        tempButtonList.push({chordName: actualChordNames[i], correct: true, value: (i)}); // generate correct answers, value should always be single digit
+        tempButtonList.push({chordName: actualChordNames[i], correct: true, value: (i)}); //generate correct answers, value should always be single digit
 
         var answerlessAllowed = this.possibleChordNames.filter(function(a) { //create list without correct answer from all possible chords to generate wrong answers from
           return a !== actualChordNames[i];
@@ -854,14 +828,14 @@ class QuizUI extends React.Component {
         var incorrectAmount;
         var random;
 
-        if (this.possibleChordNames.length > 4) { // if 2 allowed chords, 1 wrong answer, if 3, then 2, if 4+, then 3
+        if (this.possibleChordNames.length > 4) { //if 2 allowed chords, 1 wrong answer, if 3, then 2, if 4+, then 3
           incorrectAmount = 3;
         } else {
           incorrectAmount = this.possibleChordNames.length - 1;
         };
 
         if (i > 0) {
-          for (j; j < incorrectAmount; j++) { //generate incorrect answers
+          for (var j = 0; j < incorrectAmount; j++) { //generate incorrect answers, only after first row (which will be single button displaying one chord)
             this.clicked[10 * i + j] = false;
             random = Math.floor(Math.random() * answerlessAllowed.length); //index of random chord
             tempButtonList.push({chordName: answerlessAllowed[random], correct: false, value: (10 * i + j)});
@@ -869,48 +843,36 @@ class QuizUI extends React.Component {
           };
         };
 
-      //randomize row here before pushing
-      this.buttonArray.push(tempButtonList); //each list of objects represents a row and will be rendered wrapped in a div to ensure proper styling
+      //randomize row before pushing
+      var shuffledArray = [];
+      while (tempButtonList.length !== 0) {
+        var randIndex = Math.floor(Math.random() * tempButtonList.length);
+        shuffledArray.push(tempButtonList[randIndex]);
+        tempButtonList.splice(randIndex, 1);
+      };
+      this.buttonArray.push(shuffledArray); //each list of objects represents a row and will be rendered wrapped in a div to ensure proper line breaks
       };
     };
   };
 
-
-
-  componentDidUpdate() { //putting getButtons here instead of under render
-    //console.log('componentDidUpdate, calling getButtons');
-    if (this.props.init) { //if init from main component, clear out buttons and styles
-      this.clicked = {};
-      this.buttonArray = [];
-    };
-    //console.log('testing if propositions in cDU');
-    //console.log(this.props.chords.length);
-    //console.log(Object.keys(this.buttonStyling).length);
-    if (this.props.chords.length > 0 && this.buttonArray.length < 1) {
-      this.cleanChordNameData();
-      this.getButtons();
-    };
-  };
-
   render() {
-    //this.cleanChordNameData();
-    //console.log('this.buttonArray');
-    //console.log(this.buttonArray);
     return (
-      <div>
-        <div id='possibleChordDiv'>
-        {this.props.displayPossible && //can't figure out how to chain multiple bits of html after props check, so broken up into two. Try a div?
-          <h3>Possible chords:</h3>
-        }
+      <div id='QuizUI-wrapper'>
+        <div id='possible-chords-wrapper'>
         {this.props.displayPossible &&
-          this.possibleChordNames.map(function(a) {
-          return <p className='possibleChords'>{a}</p>
+          <h3 id='possible-chords-header'>Possible chords:</h3>
+        }
+        <div id='possible-chord-names'>
+        {this.props.displayPossible &&
+          this.possibleChordNames.map(function(a, index) {
+          return <h3 className='possible-chords' key={index}>{a}</h3>
           })}
         </div>
-        <div id='buttons'>
+      </div>
+      <div id='quiz-buttons'>
           {
             this.buttonArray.map(row =>
-              <div className='buttonRow'>
+              <div className='button-row'>
                 {row.map(chord => chord.correct ?
                   <CorrectButton key={chord.value} value={chord.value} clicked={this.clicked[chord.value]} makeClicked={this.makeClicked} chordName={chord.chordName} /> :
                   <IncorrectButton key={chord.value} value={chord.value} clicked={this.clicked[chord.value]} makeClicked={this.makeClicked} chordName={chord.chordName}/>
@@ -918,8 +880,8 @@ class QuizUI extends React.Component {
               </div>
             )
           }
-        </div>
       </div>
+    </div>
     );
   };
 };

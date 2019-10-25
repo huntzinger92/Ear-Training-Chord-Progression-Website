@@ -1,50 +1,191 @@
 body {
   font: 14px "Century Gothic", Futura, sans-serif;
   margin: 20px;
+  background-color: #d5deeb;
 }
 
-ol, ul {
-  padding-left: 30px;
+button {
+  font-weight: 550;
 }
 
-.board-row:after {
-  clear: both;
-  content: "";
-  display: table;
+#app-wrapper {
+  display: grid;
+  grid-template-columns: 2fr 3fr 3fr 2fr
 }
 
-.status {
-  margin-bottom: 10px;
+#header {
+
 }
 
-.square {
-  background: #fff;
-  border: 1px solid #999;
-  float: left;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 34px;
-  height: 34px;
-  margin-right: -1px;
-  margin-top: -1px;
-  padding: 0;
+#header-wrapper {
+  height: 125px;
+  border: 1px solid black;
+  background-color: #addbba;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+#title {
+  font-weight: 550;
+}
+
+.headers {
+  font-size: 15px;
   text-align: center;
-  width: 34px;
+  font-weight: 525;
+  margin: 10px;
 }
 
-.square:focus {
-  outline: none;
+#personal-website {
+  text-decoration: none;
+  color: black;
 }
 
-.kbd-navigation .square:focus {
-  background: #ddd;
+#personal-website:hover {
+  text-decoration: underline;
+  text-decoration-color: black;
 }
 
-.game {
+#settings-wrapper {
+  grid-column: 2;
+  justify-self: right;
+  margin-right: 10px;
+  border: 1px solid black;
+  background-color: #f2f2f2;
+  padding: 18px;
+}
+
+#mode-key {
+  margin-top: 10px;
+}
+
+#allowed-header {
+  margin-bottom: 7px;
+}
+
+#allowed-selections {
   display: flex;
   flex-direction: row;
 }
 
-.game-info {
-  margin-left: 20px;
+#allowed-wrapper {
+  margin-bottom: 12px;
+}
+
+#type-selection {
+  font-size: 18px;
+}
+
+#amount-selection {
+  font-size: 18px;
+}
+
+.checkbox {
+  font-size: 18px;
+}
+
+#sec-col-wrapper { /*includes sound buttons and QuizUI */
+  grid-column: 3;
+  justify-self: left;
+  margin-left: 10px;
+  border: 1px solid black;
+  background-color: #f2f2f2;
+  padding: 15px;
+}
+
+#sound-button-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sound-button {
+  height: 40px;
+  width: 125px;
+  border: 1px solid #2e2e2e;
+  font-size: 14px;
+}
+
+#play {
+  background-color: #0ead20;
+}
+#play:hover {
+  background-color: #5cbd5b;
+}
+
+#get-new-chords {
+  background-color: #3b44ff;
+}
+#get-new-chords:hover {
+  background-color: #4976e6;
+}
+
+#stop {
+  background-color: red;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+#stop:hover {
+  background-color: #ff4f4f;
+}
+
+#possible-chords-wrapper {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  background-color: #edf5ee;
+  border: 1px solid black;
+  margin-top: 8px;
+}
+
+#possible-chords-header {
+  grid-row: 1;
+  justify-self: center;
+}
+
+#possible-chord-names { /*div that wraps chord names only */
+  grid-row: 2;
+  display: flex;
+  flex-direction: row;
+  justify-self: center;
+}
+
+.possible-chords { /*chord names themselves */
+  margin: 10px;
+}
+
+#given-one-chord {
+  color: black;
+}
+
+.chord-button { /*change from camelCasing to dash to be consistent */
+  height: 40px;
+  width: 90px;
+  border: 1px solid #2e2e2e;
+  background-color: mediumaquamarine;
+}
+
+.chord-button:hover:not(#given-one-chord):not(.correct):not(.incorrect) { /*not pretty, but works - only on unclicked buttons and not first chord, change color on hover */
+  background-color: #94e3c8;
+}
+
+#quiz-buttons {
+   /* children of this div are the rows of quiz buttons */
+}
+
+.button-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.unanswered {
+  background-color: mediumaquamarine;
+}
+
+.correct {
+  background-color: green;
+}
+
+.incorrect {
+  background-color: red;
 }
