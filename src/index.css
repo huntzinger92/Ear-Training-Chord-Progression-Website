@@ -14,11 +14,13 @@ button {
 }
 
 #header {
-
+  grid-column: 2 / 4;
+  width: 50%;
+  justify-self: center;
+  margin-bottom: 25px;
 }
 
 #header-wrapper {
-  height: 125px;
   border: 1px solid black;
   background-color: #addbba;
   padding: 8px;
@@ -27,13 +29,13 @@ button {
 }
 
 #title {
-  font-weight: 550;
+  font-weight: 560;
 }
 
 .headers {
-  font-size: 15px;
+  font-size: 20px;
   text-align: center;
-  font-weight: 525;
+  font-weight: 510;
   margin: 10px;
 }
 
