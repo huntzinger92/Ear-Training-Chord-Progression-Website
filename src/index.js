@@ -626,9 +626,8 @@ class Quiz extends React.Component {
       <div id='app-wrapper'>
         <div id='header'>
           <div id='header-wrapper'>
-            <h3 className='headers' id='title'>Aural Skills Training for Chord Progressions</h3>
-            <h3 className='headers' id='by-line'>Coded by Trevor Smith</h3>
-            <h3 className='headers' id='about'><a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://huntzinger92.github.io/'>About the Author</a></h3>
+            <h3 className='headers' id='title'> A Comprehensive Chord Progression Trainer</h3>
+            <h3 className='headers' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://huntzinger92.github.io/'>Trevor Smith</a></h3>
           </div>
         </div>
         <div id='settings-wrapper'>
