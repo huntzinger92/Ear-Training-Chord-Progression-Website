@@ -1,6 +1,6 @@
 body {
   font: 14px "Century Gothic", Futura, sans-serif;
-  margin: 20px;
+  margin: 5px;
   background-color: #d5deeb;
 }
 
@@ -13,6 +13,16 @@ button {
   #app-wrapper {
     display: grid;
     grid-template-columns: 2fr 3fr 3fr 2fr;
+  }
+
+  #settings-wrapper {
+    margin-right: 10px;
+    padding: 18px;
+  }
+
+  #sec-col-wrapper { /*includes sound buttons and QuizUI */
+    margin-left: 10px;
+    padding: 15px;
   }
 
   .settings-label {
@@ -29,6 +39,11 @@ button {
 
   .checkbox {
     font-size: 18px;
+  }
+
+  #sound-button-wrapper {
+    display: flex;
+    justify-content: space-between;
   }
 
   .chord-button {
@@ -44,12 +59,31 @@ button {
     border: 1px solid #2e2e2e;
     font-size: 14px;
   }
+
+  .possible-chords { /*chord names themselves */
+    margin: 10px;
+  }
+
+  #stop {
+    margin-left: 8px;
+    margin-right: 8px;
+  }
 }
 
 @media (max-width: 650px) {
   #app-wrapper {
     display: grid;
     grid-template-columns: 1fr 3fr 3fr 1fr;
+  }
+
+  #settings-wrapper {
+    margin-right: 8px;
+    padding: 18px;
+  }
+
+  #sec-col-wrapper { /*includes sound buttons and QuizUI */
+    margin-left: 8px;
+    padding: 12px;
   }
 
   .settings-label {
@@ -68,6 +102,11 @@ button {
     font-size: 14px;
   }
 
+  #sound-button-wrapper {
+    display: flex;
+    justify-content: space-between;
+  }
+
   .chord-button {
     height: 25px;
     width: 60px;
@@ -79,11 +118,132 @@ button {
     font-size: 10px;
   }
 
+  #stop {
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+
+  #possible-chords-header {
+    font-size: 14px;
+  }
+
+  #possible-chord-names { /*div containing chord names */
+    font-size: 12px;
+  }
+
+  .possible-chords { /*chord names themselves */
+    margin: 10px;
+  }
+
   #title {
     font-size: 16px;
   }
   #by-line {
     font-size: 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  #app-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 5fr 5fr 1fr;
+  }
+
+  #settings-wrapper {
+    margin-right: 3px;
+  }
+
+  #sec-col-wrapper { /*includes sound buttons and QuizUI */
+    margin-left: 3px;
+    padding: 9px;
+  }
+
+  .settings-label {
+    font-size: 12px;
+  }
+
+  #type-selection {
+    font-size: 12px;
+  }
+
+  #amount-selection {
+    font-size: 12px;
+  }
+
+  .checkbox {
+    font-size: 12px;
+  }
+
+  .chord-button {
+    height: 23px;
+    width: 57px;
+    font-size: 10px
+  }
+  .sound-button {
+    height: 30px;
+    width: 70px;
+    font-size: 9px;
+  }
+
+  #stop {
+    margin-left: 3px;
+    margin-right: 3px;
+  }
+
+  #possible-chords-header {
+    font-size: 11px;
+  }
+
+  #possible-chord-names {
+    font-size: 9px;
+  }
+
+  #title {
+    font-size: 14px;
+  }
+  #by-line {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 460px) {
+  #app-wrapper {
+    display: grid;
+    grid-template-columns: 5px auto auto 5px;
+  }
+
+  #title {
+    font-size: 13px;
+  }
+
+  #stop {
+    margin: 0px;
+  }
+
+  #settings-wrapper {
+    width: 150px;
+    padding: 7px;
+  }
+
+  #sec-col-wrapper {
+    width: 150px;
+  }
+
+  #possible-chords-header {
+    font-size: 10px;
+  }
+
+  .possible-chords {
+    margin: 2px;
+    font-size: 8px;
+  }
+
+  .chord-button {
+    width: 46px;
+  }
+  .sound-button {
+    width: 55px;
+    font-size: 8px;
   }
 }
 
@@ -126,10 +286,8 @@ button {
 #settings-wrapper {
   grid-column: 2;
   justify-self: right;
-  margin-right: 10px;
   border: 1px solid black;
   background-color: #f2f2f2;
-  padding: 18px;
 }
 
 #mode-key {
@@ -152,15 +310,8 @@ button {
 #sec-col-wrapper { /*includes sound buttons and QuizUI */
   grid-column: 3;
   justify-self: left;
-  margin-left: 10px;
   border: 1px solid black;
   background-color: #f2f2f2;
-  padding: 15px;
-}
-
-#sound-button-wrapper {
-  display: flex;
-  justify-content: space-between;
 }
 
 #play {
@@ -171,16 +322,14 @@ button {
 }
 
 #get-new-chords {
-  background-color: #3b44ff;
+  background-color: #4976e6;
 }
 #get-new-chords:hover {
-  background-color: #4976e6;
+  background-color: #6b9fe8;
 }
 
 #stop {
   background-color: red;
-  margin-left: 8px;
-  margin-right: 8px;
 }
 #stop:hover {
   background-color: #ff4f4f;
@@ -204,10 +353,6 @@ button {
   display: flex;
   flex-direction: row;
   justify-self: center;
-}
-
-.possible-chords { /*chord names themselves */
-  margin: 10px;
 }
 
 #given-one-chord {

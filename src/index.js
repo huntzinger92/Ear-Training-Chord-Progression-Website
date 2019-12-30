@@ -654,7 +654,7 @@ class Quiz extends React.Component {
             <option value={8}>8</option>
           </select>
           <div id='allowed-wrapper'>
-            <h3 id='allowed-header'>Allowed Chords:</h3>
+            <h3 id='allowed-header' className='settings-label'>Allowed Chords:</h3>
             <div id='allowed-selections'>
               <div className='checkbox'>
                 <input type='checkbox' id='allowed-section-1' checked disabled></input>
