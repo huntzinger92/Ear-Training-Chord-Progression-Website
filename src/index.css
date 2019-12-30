@@ -245,6 +245,10 @@ button {
     width: 55px;
     font-size: 8px;
   }
+
+  .checkbox {
+    font-size: 10px;
+  }
 }
 
 #header {
