@@ -1,6 +1,5 @@
-//wish list:
-//allow switching between parallel major and minor (would involve restructuring some code and generating new chords)
-//add all triadic inversions (sevenths are fine) for best voice leading
+//to do:
+//allow chords to come from parallel major/minor (would involve generating several new audio files and restructuring of the code)
 //add some reverb to all the audio context so that chord cut offs aren't so abrupt (check audioContext.createConvolver in three.js docs)
 
 import React from 'react';
@@ -202,7 +201,6 @@ const soundbank = [
 function intToChordName(chord) {
   //chord needs to be a chord object from soundbank
   var name = '';
-  //get roman numeral (note: chord.name could have been saved as a roman numeral eventually, but as integers, I can do math that allows me to make different chords the tonic)
   if (chord.name === 1) {
     name = 'i';
   } else if (chord.name === 2) {
@@ -280,8 +278,7 @@ class Quiz extends React.Component {
   };
 
   componentDidUpdate() {
-    if (this.state.chords.length > 1 && this.state.play) { //this is not ideal, try to find a better way to do renderMusic
-      //call renderMusic from getChords with some kind of awaiting state update promise to fix this
+    if (this.state.chords.length > 1 && this.state.play) { //if there are generated chords and play is set to true
       this.renderMusic();
     };
     if (this.state.stop) {
@@ -331,7 +328,7 @@ class Quiz extends React.Component {
       });
       modal = Number(e.target.value);
     };
-    this.chordsAllowed = []; //remove all previous chords and remake list with respect to new mode
+    this.chordsAllowed = []; //remove all previous chords and make new allowed list with respect to new mode
 
     for (var i = 0; i < tempAllowedList.length; i++) {
       var tempChord = {};
@@ -393,7 +390,7 @@ class Quiz extends React.Component {
       for (var i = 1; i < chordList.length; i++) { //chord list is remade with root position instead
         if (this.state.minor && (chordList[i].name === 7 || chordList[i].name === 5)) {
           chordList[i].src = chordList[i][this.state.chordClass].root.srcMinor;
-          chordList[i].value = chordList[i][this.state.chordClass].root.value; //probably don't need to track value in the case of making all chords root position, but doing it just in case
+          chordList[i].value = chordList[i][this.state.chordClass].root.value; //currently don't need to track value in the case of making all chords root position, but doing it just in case
         } else {
           chordList[i].src = chordList[i][this.state.chordClass].root.src;
           chordList[i].value = chordList[i][this.state.chordClass].root.value;
@@ -458,7 +455,7 @@ class Quiz extends React.Component {
       });
       var modal = this.state.modal;
       var tempChord = {};
-      Object.assign(tempChord, soundbank.find(function(obj) { //deep copy, very important to avoid mutating soundbank
+      Object.assign(tempChord, soundbank.find(function(obj) { //deep copy, necessary to avoid mutating soundbank
         var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved
         if (tempName === 0) {
           tempName = 7;

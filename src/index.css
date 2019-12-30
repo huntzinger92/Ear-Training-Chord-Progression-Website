@@ -159,14 +159,14 @@ button {
   color: black;
 }
 
-.chord-button { /*change from camelCasing to dash to be consistent */
+.chord-button {
   height: 40px;
   width: 90px;
   border: 1px solid #2e2e2e;
   background-color: mediumaquamarine;
 }
 
-.chord-button:hover:not(#given-one-chord):not(.correct):not(.incorrect) { /*not pretty, but works - only on unclicked buttons and not first chord, change color on hover */
+.chord-button:hover:not(#given-one-chord):not(.correct):not(.incorrect) { /*not pretty, but works - styling applies only to unclicked buttons and not first chord, change color on hover */
   background-color: #94e3c8;
 }
 
