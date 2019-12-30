@@ -238,12 +238,12 @@ button {
     font-size: 8px;
   }
 
-  #given-one-chord {
+  /*#given-one-chord {
     width: 36px;
-  }
+  }*/
 
   .chord-button {
-    width: 46px;
+    width: 39px;
   }
   .sound-button {
     width: 55px;
