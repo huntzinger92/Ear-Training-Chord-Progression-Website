@@ -247,7 +247,11 @@ button {
   }
 
   .checkbox {
-    font-size: 10px;
+    font-size: 11px;
+  }
+  .actual-checkbox {
+    width: 12px;
+    height: 12px;
   }
 }
 

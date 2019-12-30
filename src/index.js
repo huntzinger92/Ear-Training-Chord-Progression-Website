@@ -657,31 +657,31 @@ class Quiz extends React.Component {
             <h3 id='allowed-header' className='settings-label'>Allowed Chords:</h3>
             <div id='allowed-selections'>
               <div className='checkbox'>
-                <input type='checkbox' id='allowed-section-1' checked disabled></input>
+                <input className='actual-checkbox' type='checkbox' id='allowed-section-1' checked disabled></input>
                 <label htmlFor='allowed-selection-1'>1</label>
               </div>
               <div className='checkbox'>
-                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={2} id='allowed-selection-2'></input>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={2} id='allowed-selection-2'></input>
                 <label htmlFor='allowed-selection-2'>2</label>
               </div>
               <div className='checkbox'>
-                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={3} id='allowed-selection-3'></input>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={3} id='allowed-selection-3'></input>
                 <label htmlFor='allowed-selection-3'>3</label>
               </div>
               <div className='checkbox'>
-                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={4} id='allowed-selection-4'></input>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={4} id='allowed-selection-4'></input>
                 <label htmlFor='allowed-selection-4'>4</label>
               </div>
               <div className='checkbox'>
-                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={5} id='allowed-selection-5'></input>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={5} id='allowed-selection-5'></input>
                 <label htmlFor='allowed-selection-5'>5</label>
               </div>
               <div className='checkbox'>
-                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={6} id='allowed-selection-6'></input>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={6} id='allowed-selection-6'></input>
                 <label htmlFor='allowed-selection-6'>6</label>
               </div>
               <div className='checkbox'>
-                <input type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={7} id='allowed-selection-7'></input>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={7} id='allowed-selection-7'></input>
                 <label htmlFor='allowed-selection-7'>7</label>
               </div>
             </div>
