@@ -8,15 +8,82 @@ button {
   font-weight: 550;
 }
 
-#app-wrapper {
-  display: grid;
-  grid-template-columns: 2fr 3fr 3fr 2fr;
-}
 
-@media (max-width: 750px) {
+@media (min-width: 651px) {
   #app-wrapper {
     display: grid;
-    grid-template-columns: 1fr 5fr 5fr 1fr;
+    grid-template-columns: 2fr 3fr 3fr 2fr;
+  }
+
+  .settings-label {
+    font-size: 18px;
+  }
+
+  #type-selection {
+    font-size: 18px;
+  }
+
+  #amount-selection {
+    font-size: 18px;
+  }
+
+  .checkbox {
+    font-size: 18px;
+  }
+
+  .chord-button {
+    height: 40px;
+    width: 90px;
+    border: 1px solid #2e2e2e;
+    background-color: mediumaquamarine;
+  }
+
+  .sound-button {
+    height: 40px;
+    width: 125px;
+    border: 1px solid #2e2e2e;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 650px) {
+  #app-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 3fr 3fr 1fr;
+  }
+
+  .settings-label {
+    font-size: 14px;
+  }
+
+  #type-selection {
+    font-size: 14px;
+  }
+
+  #amount-selection {
+    font-size: 14px;
+  }
+
+  .checkbox {
+    font-size: 14px;
+  }
+
+  .chord-button {
+    height: 25px;
+    width: 60px;
+    font-size: 10px
+  }
+  .sound-button {
+    height: 30px;
+    width: 80px;
+    font-size: 10px;
+  }
+
+  #title {
+    font-size: 16px;
+  }
+  #by-line {
+    font-size: 14px;
   }
 }
 
@@ -82,18 +149,6 @@ button {
   margin-bottom: 12px;
 }
 
-#type-selection {
-  font-size: 18px;
-}
-
-#amount-selection {
-  font-size: 18px;
-}
-
-.checkbox {
-  font-size: 18px;
-}
-
 #sec-col-wrapper { /*includes sound buttons and QuizUI */
   grid-column: 3;
   justify-self: left;
@@ -106,13 +161,6 @@ button {
 #sound-button-wrapper {
   display: flex;
   justify-content: space-between;
-}
-
-.sound-button {
-  height: 40px;
-  width: 125px;
-  border: 1px solid #2e2e2e;
-  font-size: 14px;
 }
 
 #play {
@@ -166,13 +214,6 @@ button {
   color: black;
 }
 
-.chord-button {
-  height: 40px;
-  width: 90px;
-  border: 1px solid #2e2e2e;
-  background-color: mediumaquamarine;
-}
-
 .chord-button:hover:not(#given-one-chord):not(.correct):not(.incorrect) { /*not pretty, but works - styling applies only to unclicked buttons and not first chord, change color on hover */
   background-color: #94e3c8;
 }
@@ -198,3 +239,13 @@ button {
 .incorrect {
   background-color: red;
 }
+
+/*mobile view, expand content divs to take up 90% height */
+/*@media (max-width: 525px) {
+  #settings-wrapper {
+    height: 90%;
+  }
+  #sec-col-wrapper {
+    height: 90%;
+  }
+}*/
