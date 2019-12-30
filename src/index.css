@@ -238,6 +238,10 @@ button {
     font-size: 8px;
   }
 
+  #given-one-chord {
+    width: 36px;
+  }
+
   .chord-button {
     width: 46px;
   }
