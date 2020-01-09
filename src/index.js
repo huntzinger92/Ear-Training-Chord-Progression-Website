@@ -268,7 +268,7 @@ class Quiz extends React.Component {
     this.handleDisplayPossible = this.handleDisplayPossible.bind(this);
     this.playMusic = this.playMusic.bind(this);
     //variables with "global" access (within component)
-    this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on this.state.stop
+    this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on this.state.stop (note: just initialized with an integer, used as a timeout object)
     this.listener = new THREE.AudioListener();
     this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
     this.detuneValue = 0; //used to detune audio to enable transpositions
@@ -278,7 +278,7 @@ class Quiz extends React.Component {
   };
 
   componentDidUpdate() {
-    if (this.state.chords.length > 1 && this.state.play) { //if there are generated chords and play is set to true
+    if (this.state.chords.length == this.state.amount && this.state.play) { //if there are generated chords and play is set to true
       this.renderMusic();
     };
     if (this.state.stop) {
@@ -624,7 +624,7 @@ class Quiz extends React.Component {
         <div id='header'>
           <div id='header-wrapper'>
             <h3 className='headers' id='title'> A Comprehensive Chord Progression Trainer</h3>
-            <h3 className='headers' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://huntzinger92.github.io/'>Trevor Smith</a></h3>
+            <h3 className='headers' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/'>Trevor Smith</a></h3>
           </div>
         </div>
         <div id='settings-wrapper'>
