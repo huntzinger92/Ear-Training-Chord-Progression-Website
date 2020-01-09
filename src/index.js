@@ -267,6 +267,7 @@ class Quiz extends React.Component {
     this.handleStop = this.handleStop.bind(this);
     this.handleDisplayPossible = this.handleDisplayPossible.bind(this);
     this.playMusic = this.playMusic.bind(this);
+    this.troubleshootDifferences = this.troubleshootDifferences.bind(this);
     //variables with "global" access (within component)
     this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on this.state.stop (note: just initialized with an integer, used as a timeout object)
     this.listener = new THREE.AudioListener();
@@ -274,11 +275,15 @@ class Quiz extends React.Component {
     this.detuneValue = 0; //used to detune audio to enable transpositions
     this.count = 0; //count will be used to keep track of how many chords have played, function playMusic clears intervalID when count === this.state.amount
     this.chordsAllowed = [soundbank[0]];
+    //
+    this.troubleshootTemp = 0;
+    this.troubleshootHash = {};
+    //
 
   };
 
   componentDidUpdate() {
-    if (this.state.chords.length == this.state.amount && this.state.play) { //if there are generated chords and play is set to true
+    if (this.state.chords.length === this.state.amount && this.state.play) { //if there are generated chords and play is set to true
       this.renderMusic();
     };
     if (this.state.stop) {
@@ -517,6 +522,10 @@ class Quiz extends React.Component {
     });
   };
 
+  troubleshootDifferences() {
+    console.log(this.troubleshootHash);
+  };
+
   getChords() {
     var tempChordHolder = [{}];
     Object.assign(tempChordHolder[0], soundbank[(7 - this.state.modal) % 7]); //makes a deep copy to avoid mutating original soundbank
@@ -583,12 +592,19 @@ class Quiz extends React.Component {
   };
 
   playMusic(total) {
+    //!
+
+    //!
     if (this.listener.context.state === 'suspended') {
       this.listener.context.resume();
     };
 
     if (this.count === Number(total)) {
       this.count = 0;
+      //!
+      this.troubleshootTemp = 0;
+      this.troubleshootDifferences();
+      //!
       if (this.state.loop) {
         this.playMusic(this.state.amount);
       }
@@ -601,10 +617,24 @@ class Quiz extends React.Component {
       };
       var tempSound = this.sound; //buffer code loses access to "this"
       var audioLoader = new THREE.AudioLoader();
+      //!
+      var ts;
+      //!
       audioLoader.load(url, function(buffer) {
   	     tempSound.setBuffer(buffer);
+         //!
+         ts = new Date();
+         //!
   	     tempSound.play();
       });
+      //!
+      if (this.troubleshootTemp !== 0) {
+        console.log(ts);
+        console.log(this.troubleshootTemp);
+        this.troubleshootHash[this.count] = ts - this.troubleshootTemp;
+      };
+      this.troubleshootTemp = ts;
+      //!
       this.count++;
 
       if (this.state.transpositions) { //only stagger playback if transpositions are enabled
