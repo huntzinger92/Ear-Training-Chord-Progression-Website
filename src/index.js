@@ -626,8 +626,7 @@ class Quiz extends React.Component {
             (v), etc. You can find a comprehensive list of chord qualities and their respective symbols <a target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'>here</a>.
             Notated in this way, a typical chord progression in a major key might look like this: <strong>vi ii V7 I</strong>.</p>
             <p className='header-text'>This website is meant to help you get used to identifying a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
-            have chosen on the settings on the left. Every chord progression plays the tonic (the one chord) first, for reference. Just choose your settings and hit the Play or Get New Chords buttons to
-            get started!</p>
+            have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords buttons to get started!</p>
             <p className='header-text' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/'>Trevor Smith</a></p>
           </div>
         </div>
