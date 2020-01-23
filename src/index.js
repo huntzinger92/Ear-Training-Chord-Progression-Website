@@ -619,12 +619,10 @@ class Quiz extends React.Component {
         <div id='header'>
           <div id='header-wrapper'>
             <h3 className='headers' id='title'> A Comprehensive Chord Progression Ear Trainer</h3>
-            <h4 className='headers' id='how-to'>Wait - how do I use this?</h4>
             <p className='header-text'>In any given key or mode, there are seven chords you can generate from the notes of its scale. These chords are referenced by the number of the <em>scale
             degree</em> that the chord is based off of, written as a roman numeral. For example, if we want to refer to a chord based off of the fifth note of the scale, we would write a "V" symbol.
             The quality of the chord changes the style of roman numeral we use - if it's a major chord, the chord symbol is capitalized (V); if it's minor, lower case
-            (v), etc. You can find a comprehensive list of chord qualities and their respective symbols <a target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'>here</a>.
-            Notated in this way, a typical chord progression in a major key might look like this: <strong>vi ii V7 I</strong>.</p>
+            (v), etc. You can find a comprehensive list of chord qualities and their respective symbols <a target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'><strong>here</strong></a>.</p>
             <p className='header-text'>This website is meant to help you get used to identifying a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
             have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords buttons to get started!</p>
             <p className='header-text' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/'>Trevor Smith</a></p>

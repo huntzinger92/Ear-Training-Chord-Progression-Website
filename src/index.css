@@ -24,16 +24,8 @@ button {
     margin-bottom: 10px
   }
 
-  #how-to {
-    font-size: 18px;
-  }
-
   .header-text {
     font-size: 17px;
-  }
-
-  #by-line {
-    font-size: 18px;
   }
 
   #settings-wrapper {
@@ -169,10 +161,6 @@ button {
   .header-text {
     font-size: 14px;
   }
-
-  #by-line {
-    font-size: 15px;
-  }
 }
 
 @media (max-width: 520px) {
@@ -236,10 +224,6 @@ button {
 
   .header-text {
     font-size: 12px;
-  }
-
-  #by-line {
-    font-size: 13px;
   }
 }
 
@@ -318,11 +302,6 @@ button {
 
 #title {
   font-weight: 550;
-}
-
-#how-to {
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
 .headers {
