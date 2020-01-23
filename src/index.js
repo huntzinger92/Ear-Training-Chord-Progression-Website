@@ -625,8 +625,9 @@ class Quiz extends React.Component {
             The quality of the chord changes the style of roman numeral we use - if it's a major chord, the chord symbol is capitalized (V); if it's minor, lower case
             (v), etc. You can find a comprehensive list of chord qualities and their respective symbols <a target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'>here</a>.
             Notated in this way, a typical chord progression in a major key might look like this: <strong>vi ii V7 I</strong>.</p>
-            <p className='header-text'>This website is meant to help you get used to identifying a wide variety of chord progressions by ear. Chords are generated at randomly with the settings you have chosen on the
-            settings on the left. Every chord progression plays the tonic (the one chord) first, for reference. Just choose your settings and hit the Play or Get New Chords buttons to get started!</p>
+            <p className='header-text'>This website is meant to help you get used to identifying a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
+            have chosen on the settings on the left. Every chord progression plays the tonic (the one chord) first, for reference. Just choose your settings and hit the Play or Get New Chords buttons to
+            get started!</p>
             <p className='header-text' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/'>Trevor Smith</a></p>
           </div>
         </div>
