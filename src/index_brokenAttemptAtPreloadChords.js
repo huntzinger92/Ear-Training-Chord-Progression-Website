@@ -236,6 +236,7 @@ class Quiz extends React.Component {
     super(props);
     this.state = {
       chords: [], //list of chosen chords (objects from soundbank var)
+      loadedSoundList: [],
       transpositions: false,
       inversions: false,
       chordClass: 'triad', //triad or seventh, see soundbank chord object props and relevant logic in getChords
@@ -267,7 +268,7 @@ class Quiz extends React.Component {
     this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on this.state.stop (note: just initialized with an integer, used as a timeout object)
     this.listener = new THREE.AudioListener();
     this.audioLoader = new THREE.AudioLoader();
-    this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
+    //this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
     this.detuneValue = 0; //used to detune audio to enable transpositions
     this.count = 0; //count will be used to keep track of how many chords have played, function playMusic clears intervalID when count === this.state.amount
     this.chordsAllowed = [soundbank[0]];
@@ -277,10 +278,9 @@ class Quiz extends React.Component {
     if (this.state.chords.length === Number(this.state.amount) && this.state.play) { //if there are the correct amount of generated chords and play is set to true
       this.renderMusic();
     };
+    //yikes
     if (this.state.stop) {
-      if (this.sound) {
-        this.sound.stop();
-      };
+      this.listener.context.suspend();
       if (this.timeout) {
         clearTimeout(this.timeout); //stops the playMusic cycle
       };
@@ -301,6 +301,7 @@ class Quiz extends React.Component {
         modal: 0,
         minor: false,
         chords: [],
+        loadedSoundList: [],
         init: true,
         stop: true
       });
@@ -310,6 +311,7 @@ class Quiz extends React.Component {
         modal: 2,
         minor: true,
         chords: [],
+        loadedSoundList: [],
         init: true,
         stop: true
       });
@@ -319,6 +321,7 @@ class Quiz extends React.Component {
         modal: Number(e.target.value),
         minor: false,
         chords: [],
+        loadedSoundList: [],
         init: true,
         stop: true
       });
@@ -346,6 +349,7 @@ class Quiz extends React.Component {
       init: true,
       play: false,
       chords: [], //clearing out chords, note that this is important for the path of processing with handleClick
+      loadedSoundList: [],
       stop: true
     });
   };
@@ -407,6 +411,7 @@ class Quiz extends React.Component {
       this.setState({
         chordClass: 'seventh',
         chords: [],
+        loadedSoundList: [],
         init: true,
         stop: true
       });
@@ -414,6 +419,7 @@ class Quiz extends React.Component {
       this.setState({
         chordClass: 'triad',
         chords: [], //clear out chords, automatically create new set
+        loadedSoundList: [],
         init: true,
         stop: true
       });
@@ -429,6 +435,7 @@ class Quiz extends React.Component {
   handleChordAllowedChange(e) {
     this.setState({ //clear out chords because we need a new set, set init to true for processing purposes elsewhere
       chords: [],
+      loadedSoundList: [],
       init: true,
       stop: true
     });
@@ -471,7 +478,7 @@ class Quiz extends React.Component {
         return obj.name === Number(e.target.value);
       });
       var index = this.chordsAllowed.indexOf(tempChord);
-      if (index !== -1) { //avoiding errors if the disallowed chord was not in allowed list (should never happen, but handling the supposedly impossible case to avoid crashing can't hurt)
+      if (index !== -1) { //avoiding errors if the disallowed chord was not in allowed list (should never happen, but still)
         this.chordsAllowed.splice(index, 1);
       };
     };
@@ -502,6 +509,7 @@ class Quiz extends React.Component {
       play: false,
       init: true,
       chords: [],
+      loadedSoundList: [],
       stop: true
     });
   };
@@ -515,14 +523,22 @@ class Quiz extends React.Component {
 
   getChords() {
     var tempChordHolder = [{}];
+    var tempLoadedSoundList = [] //will hold list of loaded sounds, passed to this.state.loadedSoundList
+    var tempSound = new THREE.Audio(this.listener); //this will hold the loaded sound, which will be appended to tempLoadedSoundList, then passed to state;
     Object.assign(tempChordHolder[0], soundbank[(7 - this.state.modal) % 7]); //makes a deep copy to avoid mutating original soundbank
     tempChordHolder[0].name = 1; //initialize first chord with root position and value with name 1
     tempChordHolder[0].src = tempChordHolder[0][this.state.chordClass].root.src;
     tempChordHolder[0].value = tempChordHolder[0][this.state.chordClass].root.value;
     tempChordHolder[0].quality = tempChordHolder[0][this.state.chordClass].quality;
+    //add loaded sound of first chord to tempLoadedSoundList (subsequent chords are covered in iteration below)
+    this.audioLoader.load(tempChordHolder[0].src, function(buffer) {
+      tempSound.setBuffer(buffer);
+    });
+    tempLoadedSoundList.push(tempSound);
 
     for (var i = 0; i < this.state.amount - 1; i++) {
       var rand = {};
+      tempSound = new THREE.Audio(this.listener);
       Object.assign(rand, this.chordsAllowed[Math.floor(Math.random() * this.chordsAllowed.length)]); //choose random chord from allowedChords, generated from handleChordAllowedChange
       if (this.state.inversions) { //following code finds out which inversion of rand chord is closest to the previous chord in list
         if (Math.abs(rand[this.state.chordClass].root.value - tempChordHolder[tempChordHolder.length - 1].value) <= Math.abs(rand[this.state.chordClass].inverted.value - tempChordHolder[tempChordHolder.length - 1].value)) {
@@ -544,6 +560,7 @@ class Quiz extends React.Component {
             rand.quality = rand[this.state.chordClass].quality;
           };
         };
+        //if inversions are not enabled, just use root position:
       } else {
         rand.value = rand[this.state.chordClass].root.value;
         if (this.state.minor && (rand.name === 7 || rand.name === 5)) {
@@ -554,11 +571,16 @@ class Quiz extends React.Component {
           rand.src = rand[this.state.chordClass].root.src;
         };
       };
+      this.audioLoader.load(rand.src, function(buffer) {
+         tempSound.setBuffer(buffer);
+      });
+      tempLoadedSoundList.push(tempSound);
       tempChordHolder.push(rand);
     };
 
     this.setState({
-      chords: tempChordHolder
+      chords: tempChordHolder,
+      loadedSoundList: tempLoadedSoundList
     });
   };
 
@@ -589,16 +611,25 @@ class Quiz extends React.Component {
         this.playMusic(this.state.amount);
       }
     } else if (this.count >= 0 && !this.state.stop) {
-      var url = this.state.chords[this.count].src;
-      this.sound = new THREE.Audio(this.listener);
+      //var url = this.state.chords[this.count].src;
+      //this.sound = new THREE.Audio(this.listener)
+      //console.log(this.state.loadedSoundList);
+      //console.log(this.state.loadedSoundList.length);
+      console.log(this.count);
+      //console.log(this.state.loadedSoundList[this.count]);
+      var currentChord = this.state.loadedSoundList[this.count];
+      //console.log('currentChord');
+      //console.log(currentChord);
       if (this.state.transpositions) {
-        this.sound.detune = this.detuneValue;
+        currentChord.detune = this.detuneValue;
       };
-      var tempSound = this.sound; //buffer code loses access to "this"
-      this.audioLoader.load(url, function(buffer) {
-  	     tempSound.setBuffer(buffer);
-  	     tempSound.play();
-      });
+      currentChord.setBuffer(this.listener.context.createBuffer(2, 132300, 44100));
+      currentChord.play();
+      //var tempSound = this.sound; //buffer code loses access to "this"
+      //this.audioLoader.load(url, function(buffer) {
+  	     //tempSound.setBuffer(buffer);
+  	     //tempSound.play();
+      //});
       this.count++;
 
       if (this.state.transpositions) { //only stagger playback if transpositions are enabled
@@ -618,10 +649,14 @@ class Quiz extends React.Component {
         <div id='header'>
           <div id='header-wrapper'>
             <h3 className='headers' id='title'> A Comprehensive Chord Progression Ear Trainer</h3>
-            <p className='header-text'>This website is meant to help you become able to identify a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
-            have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords
-            buttons to get started! - <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line'><em>Trevor Smith</em></a></p>
-            <p className='header-text'>If you are still struggling with the theory behind chord types and their symbols, you can find a thorough explanation of them <a rel="noopener noreferrer" target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'><strong>here</strong></a>.</p>
+            <p className='header-text'>This website is meant to help you get used to identifying a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
+            have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords buttons to get started!</p>
+            <p className='header-text'>Not sure on what's going on here? In any given key or mode, there are seven chords you can generate from the notes of its scale. These chords are
+            referenced by the number of the <em>scale degree</em> that the chord is based off of, written as a roman numeral. For example, if we want to refer to a chord
+            based off of the fifth note of the scale, we would write a "V" symbol. The quality of the chord changes the style of roman numeral we use - if it's a major
+            chord, the chord symbol is capitalized (V); if it's minor, lower case (v), etc. A typical chord progression in a major key might look like this: <strong>ii V I</strong>.
+            You can find a comprehensive list of chord qualities and their respective symbols <a rel="noopener noreferrer" target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'><strong>here</strong></a>.</p>
+            <p className='header-text' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/'>Trevor Smith</a></p>
           </div>
         </div>
         <div id='settings-wrapper'>

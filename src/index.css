@@ -16,6 +16,10 @@ button {
     margin-bottom: 40px;
   }
 
+  #header {
+    width: 67%;
+  }
+
   .headers {
     font-size: 20px;
   }
@@ -93,6 +97,10 @@ button {
   #settings-wrapper {
     margin-right: 8px;
     padding: 18px;
+  }
+
+  #header {
+    width: 95%;
   }
 
   #sec-col-wrapper { /*includes sound buttons and QuizUI */
@@ -286,7 +294,6 @@ button {
 
 #header {
   grid-column: 2 / 4;
-  width: 100%;
   justify-self: center;
   margin-bottom: 25px;
 }
@@ -313,10 +320,6 @@ button {
   font-weight: 500;
   margin-top: 10px;
   margin-bottom: 10px;
-}
-
-#by-line {
-  text-align: center;
 }
 
 a {

@@ -278,9 +278,7 @@ class Quiz extends React.Component {
       this.renderMusic();
     };
     if (this.state.stop) {
-      if (this.sound) {
-        this.sound.stop();
-      };
+      this.listener.context.suspend();
       if (this.timeout) {
         clearTimeout(this.timeout); //stops the playMusic cycle
       };
@@ -618,10 +616,14 @@ class Quiz extends React.Component {
         <div id='header'>
           <div id='header-wrapper'>
             <h3 className='headers' id='title'> A Comprehensive Chord Progression Ear Trainer</h3>
-            <p className='header-text'>This website is meant to help you become able to identify a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
-            have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords
-            buttons to get started! - <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line'><em>Trevor Smith</em></a></p>
-            <p className='header-text'>If you are still struggling with the theory behind chord types and their symbols, you can find a thorough explanation of them <a rel="noopener noreferrer" target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'><strong>here</strong></a>.</p>
+            <p className='header-text'>This website is meant to help you get used to identifying a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
+            have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords buttons to get started!</p>
+            <p className='header-text'>Not sure on what's going on here? In any given key or mode, there are seven chords you can generate from the notes of its scale. These chords are
+            referenced by the number of the <em>scale degree</em> that the chord is based off of, written as a roman numeral. For example, if we want to refer to a chord
+            based off of the fifth note of the scale, we would write a "V" symbol. The quality of the chord changes the style of roman numeral we use - if it's a major
+            chord, the chord symbol is capitalized (V); if it's minor, lower case (v), etc. A typical chord progression in a major key might look like this: <strong>ii V I</strong>.
+            You can find a comprehensive list of chord qualities and their respective symbols <a target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'><strong>here</strong></a>.</p>
+            <p className='header-text' id='by-line'>Coded by <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/'>Trevor Smith</a></p>
           </div>
         </div>
         <div id='settings-wrapper'>
