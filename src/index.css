@@ -8,18 +8,113 @@ button {
   font-weight: 550;
 }
 
+#all-container {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: 1fr 5fr 1fr;
+}
+
+#nav-bar {
+  grid-row: 1;
+  grid-column: 1/4;
+  background-color: black;
+  display: flex;
+  flex-direction: row;
+  padding: 5px;
+  padding-left: 15px;
+}
+
+.nav-link {
+  color: white;
+  font-size: 22px;
+  margin: 5px;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+}
+
+#settings-or-test {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+#header {
+  grid-row: 2;
+  grid-column: 2;
+  margin-top: 25px;
+}
+
+#test-wrapper {
+  grid-row: 2;
+  grid-column: 2;
+  margin-top: 15px;
+}
+
+#settings-wrapper {
+  border: 1px solid black;
+  background-color: #f2f2f2;
+  padding: 12px;
+  text-align: center;
+}
+
+#start-test-button {
+  font-size: 22px;
+  background-color: white;
+  color: black;
+  margin: 5px auto;
+  display: block;
+  padding: 6px;
+  border: 1px solid black;
+}
+
+#start-test-button:hover {
+  color: white;
+  background-color: black;
+  border: 1px solid white;
+}
+
+#allowed-selections {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+#quiz-wrapper { /*includes sound buttons and QuizUI */
+  border: 1px solid black;
+  background-color: #f2f2f2;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  grid-row-gap: 15px;
+  padding: 30px;
+}
+
+#settings-button {
+  grid-row: 1;
+  margin: auto;
+}
+
+#sound-button-wrapper {
+  grid-row: 2;
+}
+
+#play {
+
+}
+
+#stop {
+
+}
+
+#get-new-chords {
+  float: right;
+}
+
+#QuizUI {
+  grid-row: 3;
+}
 
 @media (min-width: 651px) {
-  #app-wrapper {
-    display: grid;
-    grid-template-columns: 1fr 3fr 3fr 1fr;
-    margin-bottom: 40px;
-  }
-
-  #header {
-    width: 67%;
-  }
-
   .headers {
     font-size: 20px;
   }
@@ -30,16 +125,6 @@ button {
 
   .header-text {
     font-size: 17px;
-  }
-
-  #settings-wrapper {
-    margin-right: 10px;
-    padding: 18px;
-  }
-
-  #sec-col-wrapper { /*includes sound buttons and QuizUI */
-    margin-left: 10px;
-    padding: 15px;
   }
 
   .settings-label {
@@ -56,11 +141,6 @@ button {
 
   .checkbox {
     font-size: 18px;
-  }
-
-  #sound-button-wrapper {
-    display: flex;
-    justify-content: space-between;
   }
 
   .chord-button {
@@ -88,7 +168,7 @@ button {
 }
 
 @media (max-width: 650px) {
-  #app-wrapper {
+  #test-wrapper {
     display: grid;
     grid-template-columns: 1fr 3fr 3fr 1fr;
     margin-bottom: 20px;
@@ -103,7 +183,7 @@ button {
     width: 95%;
   }
 
-  #sec-col-wrapper { /*includes sound buttons and QuizUI */
+  #quiz-wrapper { /*includes sound buttons and QuizUI */
     margin-left: 8px;
     padding: 12px;
   }
@@ -122,11 +202,6 @@ button {
 
   .checkbox {
     font-size: 14px;
-  }
-
-  #sound-button-wrapper {
-    display: flex;
-    justify-content: space-between;
   }
 
   .chord-button {
@@ -172,7 +247,7 @@ button {
 }
 
 @media (max-width: 520px) {
-  #app-wrapper {
+  #test-wrapper {
     display: grid;
     grid-template-columns: 1fr 5fr 5fr 1fr;
   }
@@ -181,7 +256,7 @@ button {
     margin-right: 3px;
   }
 
-  #sec-col-wrapper { /*includes sound buttons and QuizUI */
+  #quiz-wrapper { /*includes sound buttons and QuizUI */
     margin-left: 3px;
     padding: 9px;
   }
@@ -236,7 +311,7 @@ button {
 }
 
 @media (max-width: 460px) {
-  #app-wrapper {
+  #test-wrapper {
     display: grid;
     grid-template-columns: 5px auto auto 5px;
   }
@@ -254,7 +329,7 @@ button {
     padding: 7px;
   }
 
-  #sec-col-wrapper {
+  #quiz-wrapper {
     width: 150px;
   }
 
@@ -286,16 +361,6 @@ button {
     width: 14px;
     height: 14px;
   }
-}
-
-#app-wrapper {
-  margin-top: 15px;
-}
-
-#header {
-  grid-column: 2 / 4;
-  justify-self: center;
-  margin-bottom: 25px;
 }
 
 #header-wrapper {
@@ -332,12 +397,7 @@ a:hover {
   text-decoration-color: black;
 }
 
-#settings-wrapper {
-  grid-column: 2;
-  justify-self: right;
-  border: 1px solid black;
-  background-color: #f2f2f2;
-}
+
 
 #mode-key {
   margin-top: 10px;
@@ -347,20 +407,8 @@ a:hover {
   margin-bottom: 7px;
 }
 
-#allowed-selections {
-  display: flex;
-  flex-direction: row;
-}
-
 #allowed-wrapper {
   margin-bottom: 12px;
-}
-
-#sec-col-wrapper { /*includes sound buttons and QuizUI */
-  grid-column: 3;
-  justify-self: left;
-  border: 1px solid black;
-  background-color: #f2f2f2;
 }
 
 #play {
