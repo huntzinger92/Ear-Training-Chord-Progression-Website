@@ -3,6 +3,13 @@ import ReactDOM from 'react-dom';
 import * as THREE from "three";
 import './index.css'
 
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  NavLink
+} from "react-router-dom";
+
 //all samples 1.56 sec (whole notes at 154 bpm), C and D in 1st inv higher, E - A second inversion, Bdim first inversion
 const soundbank = [
   {
@@ -231,6 +238,539 @@ function intToChordName(chord) {
   return name;
 };
 
+function App() {
+  return (
+    <Router>
+      <Switch>
+        <Route path='/test'>
+          <Test/>
+        </Route>
+        <Route path='/'>
+          <Home/>
+        </Route>
+      </Switch>
+      <div>
+        <ul>
+          <li><NavLink to='/'>Home</NavLink></li>
+          <li><NavLink to='/test'>Test</NavLink></li>
+        </ul>
+      </div>
+    </Router>
+  );
+}
+
+function Home() {
+  return (
+    <div id='header'>
+      <div id='header-wrapper'>
+        <h3 className='headers' id='title'> A Comprehensive Chord Progression Ear Trainer</h3>
+        <p className='header-text'>This website is meant to help you become able to identify a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
+        have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords
+        buttons to get started! - <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line'><em>Trevor Smith</em></a></p>
+        <p className='header-text'>If you are still struggling with the theory behind chord types and their symbols, you can find a thorough explanation of them <a rel="noopener noreferrer" target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'><strong>here</strong></a>.</p>
+      </div>
+    </div>
+  );
+}
+
+class Test extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      chords: [], //list of chosen chords (objects from soundbank var)
+      transpositions: false,
+      inversions: false,
+      chordClass: 'triad', //triad or seventh, see soundbank chord object props and relevant logic in getChords
+      allowedList: [1], //keeps track of which chords are allowed, accomodating for mode change, used in handleTypeChange to recalculate allowed chords
+      stop: false, //when this is true, stops any playback on next chord, set to true when chords are cleared out or stop button pressed, set to false when play
+      loop: false,
+      minor: false, //true only with tonal minor, not minor modes, indicates use of altered 5 and 7 chords
+      modal: 0, //integer with which to rename chords (in Dorian, two becomes the one, etc.)
+      amount: 2, //amount of chords to be heard by user, selected with dropdown
+      init: true, //if chords have not been gotten yet, useful to ensure "hear chord" button both generates chords on first click and replays them on second click
+      play: false, //must be true for music to play on update (keep it false when you want user to adjust settings without playing music)
+      displayPossible: false, //toggles display of all possible chords with current settings
+      displaySettings: true, //toggles display of settings/quiz
+    };
+    this.renderMusic = this.renderMusic.bind(this);
+    this.getChords = this.getChords.bind(this);
+    this.handleAmountChange = this.handleAmountChange.bind(this);
+    this.handleTypeChange = this.handleTypeChange.bind(this);
+    this.handleTranspositions = this.handleTranspositions.bind(this);
+    this.handleInversions = this.handleInversions.bind(this);
+    this.handleSeventhChords = this.handleSeventhChords.bind(this);
+    this.handleLoop = this.handleLoop.bind(this);
+    this.handleChordAllowedChange = this.handleChordAllowedChange.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.handleGetNewChords = this.handleGetNewChords.bind(this);
+    this.handleStop = this.handleStop.bind(this);
+    this.handleDisplayPossible = this.handleDisplayPossible.bind(this);
+    this.playMusic = this.playMusic.bind(this);
+    this.toggleDisplay = this.toggleDisplay.bind(this);
+    //variables with "global" access (within component)
+    this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on this.state.stop (note: just initialized with an integer, used as a timeout object)
+    this.listener = new THREE.AudioListener();
+    this.audioLoader = new THREE.AudioLoader();
+    this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
+    this.detuneValue = 0; //used to detune audio to enable transpositions
+    this.count = 0; //count will be used to keep track of how many chords have played, function playMusic clears intervalID when count === this.state.amount
+    this.chordsAllowed = [soundbank[0]];
+  };
+
+  componentDidUpdate() {
+    if (this.state.chords.length === Number(this.state.amount) && this.state.play) { //if there are the correct amount of generated chords and play is set to true
+      this.renderMusic();
+    };
+    if (this.state.stop) {
+      if (this.sound) {
+        this.sound.stop();
+      };
+      if (this.timeout) {
+        clearTimeout(this.timeout); //stops the playMusic cycle
+      };
+      this.count = 0; //in case music is stopped before completing cycle in playMusic, on next play start from first chord
+      this.setState({
+        stop: false
+      });
+    };
+  };
+
+  toggleDisplay() {
+    this.setState({
+      displaySettings: !this.state.displaySettings
+    });
+  };
+
+  //HANDLERS FOR SETTING CHANGES
+
+  handleTypeChange(e) {
+    var tempAllowedList = this.state.allowedList; //ensure global access within function
+    var modal;
+    if (e.target.value === 'major') {
+      this.setState({
+        modal: 0,
+        minor: false,
+        chords: [],
+        init: true,
+        stop: true
+      });
+      modal = 0;
+    } else if (e.target.value ==='minor') {
+      this.setState({
+        modal: 2,
+        minor: true,
+        chords: [],
+        init: true,
+        stop: true
+      });
+      modal = 2;
+    } else {
+      this.setState({
+        modal: Number(e.target.value),
+        minor: false,
+        chords: [],
+        init: true,
+        stop: true
+      });
+      modal = Number(e.target.value);
+    };
+    this.chordsAllowed = []; //remove all previous chords and make new allowed list with respect to new mode
+
+    for (var i = 0; i < tempAllowedList.length; i++) {
+      var tempChord = {};
+      Object.assign(tempChord, soundbank.find(function(obj) { //deep copy of object is necessary so you aren't altering the original soundbank
+        var tempName = (tempAllowedList[i] + 7 - modal) % 7; //converts the number chord with respect to new tonic to the "originally named" chord as held in soundbank
+        if (tempName === 0) {
+          tempName = 7;
+        };
+        return obj.name === tempName;
+      }));
+      tempChord.name = tempAllowedList[i];
+      this.chordsAllowed.push(tempChord);
+    };
+  };
+
+  handleAmountChange(e) {
+    this.setState({
+      amount: e.target.value,
+      init: true,
+      play: false,
+      chords: [], //clearing out chords, note that this is important for the path of processing with handleClick
+      stop: true
+    });
+  };
+
+  handleTranspositions() {
+    this.setState({
+      transpositions: !this.state.transpositions
+    });
+  };
+
+  handleInversions() {
+    if (!this.state.inversions && (this.state.chords.length > 0)) { //if inversions have just been allowed and we already have chords
+      var chordList = this.state.chords; //to avoid mutating state directly
+      for (var i = 1; i < chordList.length; i++) { //redo chord list to accomodate inversions. Allows the user to hear same chord progression with different settings!
+        if (Math.abs(chordList[i][this.state.chordClass].root.value - chordList[i-1].value) <= Math.abs(chordList[i][this.state.chordClass].inverted.value - chordList[i - 1].value)) {
+          if (this.state.minor && (chordList[i].name === 7 || chordList[i].name === 5)) {
+            chordList[i].src = chordList[i][this.state.chordClass].root.srcMinor;
+            chordList[i].value = chordList[i][this.state.chordClass].root.value;
+          } else {
+            chordList[i].src = chordList[i][this.state.chordClass].root.src;
+            chordList[i].value = chordList[i][this.state.chordClass].root.value;
+          };
+        } else {
+          if (this.state.minor && (chordList[i].name === 7 || chordList[i].name === 5)) {
+            chordList[i].src = chordList[i][this.state.chordClass].inverted.srcMinor;
+            chordList[i].value = chordList[i][this.state.chordClass].inverted.value;
+          } else {
+            chordList[i].src = chordList[i][this.state.chordClass].inverted.src;
+            chordList[i].value = chordList[i][this.state.chordClass].inverted.value;
+          };
+        };
+      };
+      this.setState({
+        chords: chordList
+      });
+    } else if (this.state.inversions && (this.state.chords.length > 0)) { //if inversions have just been prohibited and we already have chords
+      var chordList = this.state.chords;
+      for (var i = 1; i < chordList.length; i++) { //chord list is remade with root position instead
+        if (this.state.minor && (chordList[i].name === 7 || chordList[i].name === 5)) {
+          chordList[i].src = chordList[i][this.state.chordClass].root.srcMinor;
+          chordList[i].value = chordList[i][this.state.chordClass].root.value; //currently don't need to track value in the case of making all chords root position, but doing it just in case
+        } else {
+          chordList[i].src = chordList[i][this.state.chordClass].root.src;
+          chordList[i].value = chordList[i][this.state.chordClass].root.value;
+        };
+      };
+      this.setState({
+        chords: chordList
+      });
+    };
+
+    this.setState({
+      inversions: !this.state.inversions,
+    });
+  };
+
+  handleSeventhChords(e) {
+    if (e.target.checked) {
+      this.setState({
+        chordClass: 'seventh',
+        chords: [],
+        init: true,
+        stop: true
+      });
+    } else {
+      this.setState({
+        chordClass: 'triad',
+        chords: [], //clear out chords, automatically create new set
+        init: true,
+        stop: true
+      });
+    };
+  };
+
+  handleLoop() {
+    this.setState({
+      loop: !this.state.loop
+    });
+  };
+
+  handleChordAllowedChange(e) {
+    this.setState({ //clear out chords because we need a new set, set init to true for processing purposes elsewhere
+      chords: [],
+      init: true,
+      stop: true
+    });
+
+    var modal = this.state.modal;
+    var tempChord = soundbank.find(function(obj) {
+      var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved in original soundbank
+      if (tempName === 0) { //this code makes that adjustment (duplicated later in the getChords function)
+        tempName = 7;
+      };
+      return tempName === Number(e.target.value);
+    });
+
+    var tempAllowedList = this.state.allowedList;
+
+    if (e.target.checked) { //if chord has been allowed, add it to the list of allowed chords
+      tempAllowedList.push(Number(e.target.value));
+      this.setState({
+        allowedList: tempAllowedList
+      });
+      var modal = this.state.modal;
+      var tempChord = {};
+      Object.assign(tempChord, soundbank.find(function(obj) { //deep copy, necessary to avoid mutating soundbank
+        var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved
+        if (tempName === 0) {
+          tempName = 7;
+        };
+        return tempName === Number(e.target.value);
+      }));
+      tempChord.name = Number(e.target.value); //chords in chordsAllowed are renamed with respect to mode - important for rendering correct name in QuizUI section
+      this.chordsAllowed.push(tempChord);
+    } else { //else if chord has been forbidden, remove chord from allowed chords
+      var tempIndex = tempAllowedList.indexOf(Number(e.target.value));
+      tempAllowedList.splice(tempIndex, 1);
+      this.setState({
+        allowedList: tempAllowedList
+      });
+
+      var tempChord = this.chordsAllowed.find(function(obj) {
+        return obj.name === Number(e.target.value);
+      });
+      var index = this.chordsAllowed.indexOf(tempChord);
+      if (index !== -1) { //avoiding errors if the disallowed chord was not in allowed list (should never happen, but handling the supposedly impossible case to avoid crashing can't hurt)
+        this.chordsAllowed.splice(index, 1);
+      };
+    };
+  };
+
+  handleDisplayPossible() {
+    this.setState({
+      displayPossible: !this.state.displayPossible
+    });
+  };
+
+  //SOUND BUTTONS
+
+  handleClick() {
+    this.setState({
+      play: true,
+      stop: false
+    });
+    if (this.state.chords.length > 0) {
+      this.renderMusic();
+    } else {
+      this.getChords();
+    };
+  };
+
+  handleGetNewChords() {
+    this.setState({
+      play: false,
+      init: true,
+      chords: [],
+      stop: true
+    });
+  };
+
+  handleStop() {
+    this.setState({
+      play: false,
+      stop: true
+    });
+  };
+
+  getChords() {
+    var tempChordHolder = [{}];
+    Object.assign(tempChordHolder[0], soundbank[(7 - this.state.modal) % 7]); //makes a deep copy to avoid mutating original soundbank
+    tempChordHolder[0].name = 1; //initialize first chord with root position and value with name 1
+    tempChordHolder[0].src = tempChordHolder[0][this.state.chordClass].root.src;
+    tempChordHolder[0].value = tempChordHolder[0][this.state.chordClass].root.value;
+    tempChordHolder[0].quality = tempChordHolder[0][this.state.chordClass].quality;
+
+    for (var i = 0; i < this.state.amount - 1; i++) {
+      var rand = {};
+      Object.assign(rand, this.chordsAllowed[Math.floor(Math.random() * this.chordsAllowed.length)]); //choose random chord from allowedChords, generated from handleChordAllowedChange
+      if (this.state.inversions) { //following code finds out which inversion of rand chord is closest to the previous chord in list
+        if (Math.abs(rand[this.state.chordClass].root.value - tempChordHolder[tempChordHolder.length - 1].value) <= Math.abs(rand[this.state.chordClass].inverted.value - tempChordHolder[tempChordHolder.length - 1].value)) {
+          rand.value = rand[this.state.chordClass].root.value;
+          if (this.state.minor && (rand.name === 7 || rand.name === 5)) {
+            rand.quality = rand[this.state.chordClass].qualityMinor;
+            rand.src = rand[this.state.chordClass].root.srcMinor;
+          } else {
+            rand.src = rand[this.state.chordClass].root.src;
+            rand.quality = rand[this.state.chordClass].quality;
+          };
+        } else {
+          rand.value = rand[this.state.chordClass].inverted.value;
+          if (this.state.minor && (rand.name === 7 || rand.name === 5)) {
+            rand.quality = rand[this.state.chordClass].qualityMinor;
+            rand.src = rand[this.state.chordClass].inverted.srcMinor;
+          } else {
+            rand.src = rand[this.state.chordClass].inverted.src;
+            rand.quality = rand[this.state.chordClass].quality;
+          };
+        };
+      } else {
+        rand.value = rand[this.state.chordClass].root.value;
+        if (this.state.minor && (rand.name === 7 || rand.name === 5)) {
+          rand.quality = rand[this.state.chordClass].qualityMinor;
+          rand.src = rand[this.state.chordClass].root.srcMinor;
+        } else {
+          rand.quality = rand[this.state.chordClass].quality;
+          rand.src = rand[this.state.chordClass].root.src;
+        };
+      };
+      tempChordHolder.push(rand);
+    };
+
+    this.setState({
+      chords: tempChordHolder
+    });
+  };
+
+  renderMusic() {
+    this.setState({
+      play: false
+    });
+
+    if (this.state.init) {
+      if (this.state.transpositions) {
+        this.detuneValue = (((Math.floor(Math.random() * 6)) - 3) * 100); //anywhere from -300 to +200 cents (3 half steps down to 2 half steps up)
+      };
+      this.setState({
+        init: false
+      });
+    };
+    this.playMusic(this.state.amount);
+  };
+
+  playMusic(totalChordsPlayed) {
+    if (this.listener.context.state === 'suspended') {
+      this.listener.context.resume();
+    };
+
+    if (this.count === Number(totalChordsPlayed)) {
+      this.count = 0;
+      if (this.state.loop) {
+        this.playMusic(this.state.amount);
+      }
+    } else if (this.count >= 0 && !this.state.stop) {
+      var url = this.state.chords[this.count].src;
+      this.sound = new THREE.Audio(this.listener);
+      if (this.state.transpositions) {
+        this.sound.detune = this.detuneValue;
+      };
+      var tempSound = this.sound; //buffer code loses access to "this"
+      this.audioLoader.load(url, function(buffer) {
+  	     tempSound.setBuffer(buffer);
+  	     tempSound.play();
+      });
+      this.count++;
+
+      if (this.state.transpositions) { //only stagger playback if transpositions are enabled
+        this.timeout = setTimeout(this.playMusic, 1550 - (this.detuneValue/2), this.state.amount); //note: timeout value has to be adjusted according to detune value because detune alters playback speed of chords
+      } else {
+        this.timeout = setTimeout(this.playMusic, 1550, this.state.amount);
+      };
+
+    } else {
+      console.log('A variable named this.count is less than 0. Something terrible has occured. Please refresh the page and pretend this never happened.');
+    };
+  };
+
+  render() {
+    return (
+      <div id='app-wrapper'>
+        <div id='settings-wrapper' style={{display: this.state.displaySettings ? 'block' : 'none'}}>
+          <h3 className='settings-label' id='mode-key'>Mode/Key:</h3>
+          <select onChange={this.handleTypeChange} id='type-selection'>
+            <optgroup label='Keys'>
+              <option value='major' defaultValue>Major</option>
+              <option value='minor'>Minor</option>
+            </optgroup>
+            <optgroup label='Modes'>
+              <option value={6}>Dorian</option>
+              <option value={5}>Phrygian</option>
+              <option value={4}>Lydian</option>
+              <option value={3}>Mixolydian</option>
+              <option value={2}>Aeolian</option>
+              <option value={1}>Locrian</option>
+            </optgroup>
+          </select>
+          <h3 className='settings-label'>Amount of Chords:</h3>
+          <select onChange={this.handleAmountChange} id='amount-selection'>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={5}>5</option>
+            <option value={6}>6</option>
+            <option value={7}>7</option>
+            <option value={8}>8</option>
+          </select>
+          <div id='allowed-wrapper'>
+            <h3 id='allowed-header' className='settings-label'>Allowed Chords:</h3>
+            <div id='allowed-selections'>
+              <div className='checkbox'>
+                <input className='actual-checkbox' type='checkbox' id='allowed-section-1' checked disabled></input>
+                <label htmlFor='allowed-selection-1'>1</label>
+              </div>
+              <div className='checkbox'>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={2} id='allowed-selection-2'></input>
+                <label htmlFor='allowed-selection-2'>2</label>
+              </div>
+              <div className='checkbox'>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={3} id='allowed-selection-3'></input>
+                <label htmlFor='allowed-selection-3'>3</label>
+              </div>
+              <div className='checkbox'>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={4} id='allowed-selection-4'></input>
+                <label htmlFor='allowed-selection-4'>4</label>
+              </div>
+              <div className='checkbox'>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={5} id='allowed-selection-5'></input>
+                <label htmlFor='allowed-selection-5'>5</label>
+              </div>
+              <div className='checkbox'>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={6} id='allowed-selection-6'></input>
+                <label htmlFor='allowed-selection-6'>6</label>
+              </div>
+              <div className='checkbox'>
+                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={7} id='allowed-selection-7'></input>
+                <label htmlFor='allowed-selection-7'>7</label>
+              </div>
+            </div>
+          </div>
+          <div id='assorted-checkboxes'>
+            <div className='checkbox'>
+              <input type="checkbox" id="allow-transpositions" name="allow-transpositions" onChange={this.handleTranspositions}></input>
+              <label htmlFor="allow-transpositions">Allow Transpositions</label>
+            </div>
+            <div className='checkbox'>
+              <input type="checkbox" id="allow-inversions" name="allow-inversions" onChange={this.handleInversions}></input>
+              <label htmlFor="allow-transpositions">Allow Inversions</label>
+            </div>
+            <div className='checkbox'>
+              <input type="checkbox" id="use-seventh-chords" name="use-seventh-chords" onChange={(event) => this.handleSeventhChords(event)}></input>
+              <label htmlFor="use-seventh-chords">Use Seventh Chords</label>
+            </div>
+            <div className='checkbox'>
+              <input type="checkbox" id="loop" name="loop" onChange={this.handleLoop}></input>
+              <label htmlFor="loop">Loop Chord Playback</label>
+            </div>
+            <div className='checkbox'>
+              <input type='checkbox' id='displayPossible' name='displayPossible' onChange={this.handleDisplayPossible}></input>
+              <label htmlFor='displayPossible'>Display All Possible Chords</label>
+            </div>
+          </div>
+          <button onClick={this.toggleDisplay}>Begin Test</button>
+        </div>
+        <div id='sec-col-wrapper' style={{display: this.state.displaySettings ? 'none' : 'block'}}>
+          <div id='sound-button-wrapper'>
+  		      <button id='play' className='sound-button' onClick={this.handleClick}>Play</button>
+            <button id='stop' className='sound-button' onClick={this.handleStop}>Stop</button>
+            <button id='get-new-chords' className='sound-button' onClick={this.handleGetNewChords}>Get New Chords</button>
+            <button className='sound-button' onClick={this.toggleDisplay}>Settings</button>
+          </div>
+          <div id='QuizUI'>
+            <QuizUI chords = {this.state.chords}
+                  chordsAllowed = {this.chordsAllowed}
+                  amount = {this.state.amount}
+                  minor = {this.state.minor}
+                  chordClass = {this.state.chordClass}
+                  displayPossible = {this.state.displayPossible}
+                  init = {this.state.init}
+                  />
+          </div>
+        </div>
+      </div>
+    );
+  };
+};
+
 class Quiz extends React.Component {
   constructor(props) {
     super(props);
@@ -274,6 +814,7 @@ class Quiz extends React.Component {
   };
 
   componentDidUpdate() {
+    console.log(this.state.displaySettings);
     if (this.state.chords.length === Number(this.state.amount) && this.state.play) { //if there are the correct amount of generated chords and play is set to true
       this.renderMusic();
     };
@@ -880,5 +1421,7 @@ class QuizUI extends React.Component {
 };
 
 window.addEventListener('DOMContentLoaded', (event) => {
-  ReactDOM.render(<Quiz />, document.getElementById('root'));
+  ReactDOM.render(
+    <App />, document.getElementById('root')
+  );
 });
