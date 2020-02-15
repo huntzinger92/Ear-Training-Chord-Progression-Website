@@ -1,8 +1,9 @@
-/*Holt stuff, to be integrated later*/
-#configureText {
+/*Holt stuff, to be fully integrated later*/
+#configure-test-header {
   max-width:400px;
   font-family:'Archivo Narrow';
   text-align:center;
+  margin: auto;
   h2 {
     text-transform:uppercase;
     letter-spacing:3px;
@@ -10,7 +11,18 @@
     grid-template-columns:auto auto;
     #configure {
       justify-self:right;
-      width:40px;
+    }
+    span {
+      text-align: left;
+      line-height: 40px;
+      margin-left: 5px;
+    }
+  }
+}
+
+.settings-icon {
+  enable-background: new 0 0 26.44 30.3;
+  width:40px;
   height:40px;
 	.st0{stroke:#000000;stroke-width:2;stroke-miterlimit:10;}
 	.st1{fill:none;stroke:#000000;stroke-miterlimit:10;}
@@ -20,15 +32,29 @@
 	.st5{fill:none;stroke:#000000;stroke-width:3;stroke-miterlimit:10;}
 	.st6{fill:none;stroke:#000000;stroke-miterlimit:10;stroke-dasharray:12.0086,12.0086;}
 	.st7{fill:#ED1C24;}
+}
 
-    }
-    span {
-      text-align: left;
-    line-height: 40px;
-    margin-left: 5px;
-    }
+#assorted-checkboxes {
+  width: 375px;
+  margin: auto;
+}
+
+.checkbox {
+  display: grid;
+  grid-template-columns: 50px auto;
+  input {
+    grid-column: 1;
+    width: 40px;
+    height: 40px;
+  }
+  label {
+    grid-column: 2;
+    justify-self: start;
+    font-size: 22px;
   }
 }
+
+
 
 /*Rest of stuff (responsive stuff old and will need to be reworked) */
 

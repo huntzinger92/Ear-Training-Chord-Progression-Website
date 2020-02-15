@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import * as THREE from "three";
-import './index.css'
+import './index.scss'
 
 import {
   BrowserRouter as Router,
@@ -286,7 +286,7 @@ class Test extends React.Component {
       loop: false,
       minor: false, //true only with tonal minor, not minor modes, indicates use of altered 5 and 7 chords
       modal: 0, //integer with which to rename chords (in Dorian, two becomes the one, etc.)
-      amount: 2, //amount of chords to be heard by user, selected with dropdown
+      amount: 4, //amount of chords to be heard by user, selected with dropdown
       init: true, //if chords have not been gotten yet, useful to ensure "hear chord" button both generates chords on first click and replays them on second click
       play: false, //must be true for music to play on update (keep it false when you want user to adjust settings without playing music)
       displayPossible: false, //toggles display of all possible chords with current settings
@@ -314,7 +314,7 @@ class Test extends React.Component {
     this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
     this.detuneValue = 0; //used to detune audio to enable transpositions
     this.count = 0; //count will be used to keep track of how many chords have played, function playMusic clears intervalID when count === this.state.amount
-    this.chordsAllowed = [soundbank[0]];
+    this.chordsAllowed = [soundbank[0], soundbank[3], soundbank[4]]; //used to generate random chord progressions, initialized with 1,4,5 in major
   };
 
   componentDidUpdate() {
@@ -666,9 +666,24 @@ class Test extends React.Component {
     return (
       <div id='test-wrapper'>
         <div id='settings-wrapper' style={{display: this.state.displaySettings ? 'block' : 'none'}}>
-          <button id='start-test-button' onClick={this.toggleDisplay}>Start Test</button>
+          <div id='configure-test-header' onClick={this.toggleDisplay}>
+            <h2>
+            <svg version="1.1" id="configure" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	           viewBox="0 0 43.73 36.41" xmlSpace="preserve">
+             <g>
+	            <rect x="7.71" y="5.03" width="4.11" height="26.72"/>
+	            <rect x="19.92" y="5.03" width="4.11" height="26.72"/>
+	            <rect x="32.14" y="5.03" width="4.11" height="26.72"/>
+	            <rect x="31.43" y="18.89" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 58.5102 -9.8721)" width="5.53" height="10.85"/>
+	            <rect x="19.21" y="6.13" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 33.5347 -10.419)" width="5.53" height="10.85"/>
+	            <rect x="7" y="14.99" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 30.181 10.656)" width="5.53" height="10.85"/>
+              </g>
+            </svg>
+            <span id='configure-test-header-text'>Start Test</span>
+          </h2>
+          </div>
           <h3 className='settings-label' id='mode-key'>Mode/Key:</h3>
-          <select onChange={this.handleTypeChange} id='type-selection'>
+          <select className='settings-dropdown' onChange={this.handleTypeChange} id='type-selection'>
             <optgroup label='Keys'>
               <option value='major' defaultValue>Major</option>
               <option value='minor'>Minor</option>
@@ -683,7 +698,7 @@ class Test extends React.Component {
             </optgroup>
           </select>
           <h3 className='settings-label'>Amount of Chords:</h3>
-          <select onChange={this.handleAmountChange} id='amount-selection'>
+          <select className='settings-dropdown'onChange={this.handleAmountChange} id='amount-selection'>
             <option value={2}>2</option>
             <option value={3}>3</option>
             <option value={4}>4</option>
@@ -728,30 +743,92 @@ class Test extends React.Component {
           <div id='assorted-checkboxes'>
             <div className='checkbox'>
               <input type="checkbox" id="allow-transpositions" name="allow-transpositions" onChange={this.handleTranspositions}></input>
-              <label htmlFor="allow-transpositions">Allow Transpositions</label>
+              <label htmlFor="allow-transpositions">
+                <svg version="1.1" id="transpose" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                  viewBox="0 0 26.44 30.61" xmlSpace="preserve">
+                  <rect x="16.63" y="4.48" transform="matrix(-1 -1.224647e-16 1.224647e-16 -1 35.3472 28.0688)" width="2.08" height="19.12"/>
+                  <polygon points="21.6,22.37 17.67,26.3 13.75,22.37 "/>
+                  <rect x="7.63" y="7.18" width="2.08" height="19.12"/>
+                  <polygon points="4.75,8.4 8.67,4.48 12.6,8.4 "/>
+                </svg>
+              Allow Transpositions</label>
             </div>
             <div className='checkbox'>
               <input type="checkbox" id="allow-inversions" name="allow-inversions" onChange={this.handleInversions}></input>
-              <label htmlFor="allow-transpositions">Allow Inversions</label>
+              <label htmlFor="allow-transpositions">
+                <svg version="1.1" id="inversions" className="settings-icon" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	               viewBox="0 0 26.44 30.3" xmlSpace="preserve">
+                 <polygon points="12.42,0 16.28,3.86 12.42,7.72 "/>
+                 <circle cx="15.39" cy="25.64" r="2.21"/>
+                 <circle cx="15.39" cy="18.79" r="2.21"/>
+                 <circle cx="15.39" cy="11.94" r="2.21"/>
+                 <g>
+	                <path d="M10.81,26.25c-4.19-1.76-7.01-6.35-7.01-11.43c0-6.03,3.96-11.21,9.21-12.06l0.32,1.97C9.04,5.43,5.81,9.77,5.81,14.82
+		                c0,4.28,2.32,8.13,5.78,9.58L10.81,26.25z"/>
+                 </g>
+                </svg>
+              Allow Inversions</label>
             </div>
             <div className='checkbox'>
               <input type="checkbox" id="use-seventh-chords" name="use-seventh-chords" onChange={(event) => this.handleSeventhChords(event)}></input>
-              <label htmlFor="use-seventh-chords">Use Seventh Chords</label>
+              <label htmlFor="use-seventh-chords">
+                <svg version="1.1" id="allowSevenths" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	               viewBox="0 0 28.6 25.27" xmlSpace="preserve">
+	               <g>
+		               <path d="M5.24,4.47h3.33l3.64,12.4h0.1l3.59-12.4h3.16L13.78,21.8h-3.26L5.24,4.47z"/>
+		               <path d="M22.38,8.88c0.57-1.5,1.29-2.81,2.14-3.94H20.4V3.29h6.04v1.19c-0.83,1.26-1.54,2.58-2.11,3.98s-0.86,2.79-0.86,4.18
+			                c0,0.26,0,0.52,0.01,0.75h-1.96C21.52,11.88,21.81,10.37,22.38,8.88z"/>
+	               </g>
+                </svg>
+              Use Seventh Chords</label>
             </div>
             <div className='checkbox'>
               <input type="checkbox" id="loop" name="loop" onChange={this.handleLoop}></input>
-              <label htmlFor="loop">Loop Chord Playback</label>
+              <label htmlFor="loop">
+                <svg version="1.1" id="loopPlayback" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                  viewBox="0 0 25.11 19.84" xmlSpace="preserve">
+                  <polygon points="15.08,9.24 11.33,5.48 15.08,1.73 "/>
+                  <g>
+                    <path d="M18.74,17.46H6.03c-2.13,0-3.87-2.02-3.87-4.5V8.98c0-2.48,1.74-4.5,3.87-4.5h2.72v2H6.03c-1.01,0-1.87,1.14-1.87,2.5v3.98
+                      c0,1.35,0.86,2.5,1.87,2.5h12.71c1.01,0,1.87-1.14,1.87-2.5V8.98c0-1.35-0.86-2.5-1.87-2.5h-4.27v-2h4.27
+                      c2.13,0,3.87,2.02,3.87,4.5v3.98C22.62,15.44,20.88,17.46,18.74,17.46z"/>
+                  </g>
+                </svg>
+                Loop Chord Playback</label>
             </div>
             <div className='checkbox'>
               <input type='checkbox' id='displayPossible' name='displayPossible' onChange={this.handleDisplayPossible}></input>
-              <label htmlFor='displayPossible'>Display All Possible Chords</label>
+              <label htmlFor='displayPossible'>
+                <svg version="1.1" id="displayAll" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                  viewBox="0 0 28.6 26.94" xmlSpace="preserve">
+                  <g>
+                    <path d="M13.89,21.32c-4.74,0-9.16-2.55-11.54-6.66l-0.29-0.5l0.29-0.5c2.37-4.11,6.79-6.67,11.54-6.67
+                      c4.74,0,9.16,2.55,11.54,6.67l0.29,0.5l-0.29,0.5C23.05,18.77,18.62,21.32,13.89,21.32z M4.39,14.16c2.08,3.2,5.67,5.16,9.5,5.16
+                      c3.83,0,7.42-1.96,9.51-5.16c-2.08-3.2-5.67-5.17-9.51-5.17C10.05,8.99,6.47,10.96,4.39,14.16z"/>
+                  </g>
+                  <circle cx="13.89" cy="14.16" r="5.41"/>
+                </svg>
+                Display All Possible Chords</label>
             </div>
           </div>
         </div>
         <div id='quiz-wrapper' style={{display: this.state.displaySettings ? 'none' : 'grid'}}>
-          <div id='settings-button'>
-            <button className='sound-button' onClick={this.toggleDisplay}>Configure Test</button>
-          </div>
+        <div id='configure-test-header' onClick={this.toggleDisplay}>
+          <h2>
+          <svg version="1.1" id="configure" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+           viewBox="0 0 43.73 36.41" xmlSpace="preserve">
+           <g>
+            <rect x="7.71" y="5.03" width="4.11" height="26.72"/>
+            <rect x="19.92" y="5.03" width="4.11" height="26.72"/>
+            <rect x="32.14" y="5.03" width="4.11" height="26.72"/>
+            <rect x="31.43" y="18.89" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 58.5102 -9.8721)" width="5.53" height="10.85"/>
+            <rect x="19.21" y="6.13" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 33.5347 -10.419)" width="5.53" height="10.85"/>
+            <rect x="7" y="14.99" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 30.181 10.656)" width="5.53" height="10.85"/>
+            </g>
+          </svg>
+          <span id='configure-test-header-text'>Configure Test</span>
+        </h2>
+        </div>
           <div id='sound-button-wrapper'>
   		      <button id='play' className='sound-button' onClick={this.handleClick}>Play</button>
             <button id='stop' className='sound-button' onClick={this.handleStop}>Stop</button>
