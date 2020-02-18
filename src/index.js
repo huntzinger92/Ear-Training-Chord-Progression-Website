@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCaretRight, faStop, faRedoAlt, faSlidersH, faCheck, faTimes, faHome } from '@fortawesome/free-solid-svg-icons'
+import { faCaretRight, faStop, faRedoAlt, faSlidersH, faCheck, faTimes, faHome, faCog } from '@fortawesome/free-solid-svg-icons'
 import * as THREE from "three";
 import './index.scss'
 
@@ -243,7 +243,12 @@ function intToChordName(chord) {
 function App() {
   return (
     <div id='all-container'>
-      <Router >
+      <Router>
+        <div id='nav-bar'>
+          <NavLink to='/' className='nav-links'>Home</NavLink>
+          <NavLink to='/test' className='nav-links'>Test</NavLink>
+          <a rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line' className='nav-links'>About</a>
+        </div>
         <Switch id='settings-or-test'>
           <Route path='/test'>
             <Test/>
@@ -269,11 +274,11 @@ function Home() {
         to get started!</p>
       </div>
         <div id='explanation'>
-          <p className='explanation-text'>In any given key or mode, there are seven chords you can make, each one based on one note of the scale. The names of these chords come from which note of
+          <p className='explanation-text'>In any given key or mode, there are seven chords you can make, each one based off of one note of the scale. The names of these chords come from which note of
           the scale they are based on (known as <em>scale degrees</em>), expressed as a roman numeral. The <em>quality</em> of the chord (major, minor, etc.) determines whether
           or not the roman numeral is uppercase or lowercase, and which symbols may need to be added.</p>
           <div id='example'>
-            <p className='explanation-text'>Take a look at the chord chart for major key triads below:</p>
+            <p className='explanation-text'>Take a look at the chord chart for some major key triads below:</p>
             <div id='example-grid'>
               <p id='example-degree'>Scale Degree</p>
               <p id='example-1'>1</p>
@@ -304,7 +309,6 @@ function Home() {
           <FontAwesomeIcon icon={faCaretRight} size="2x" className='sound-icon'/>
           <p>Start Test</p>
         </NavLink>
-        <p className='header-text' id='by-line-p'><a rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line' className='link'>About the Author</a></p>
     </div>
   );
 }
@@ -317,7 +321,7 @@ class Test extends React.Component {
       transpositions: false,
       inversions: false,
       chordClass: 'triad', //triad or seventh, see soundbank chord object props and relevant logic in getChords
-      allowedList: [1], //keeps track of which chords are allowed, accomodating for mode change, used in handleTypeChange to recalculate allowed chords
+      allowedList: [1,4,5], //keeps track of which chords are allowed, accomodating for mode change, used in handleTypeChange to recalculate allowed chords
       stop: false, //when this is true, stops any playback on next chord, set to true when chords are cleared out or stop button pressed, set to false when play
       loop: false,
       minor: false, //true only with tonal minor, not minor modes, indicates use of altered 5 and 7 chords
@@ -886,9 +890,10 @@ class Test extends React.Component {
             </button>
             <button id='get-new-chords' className='sound-button' onClick={this.handleGetNewChords}>
               <FontAwesomeIcon icon={faRedoAlt} size="2x" className="sound-icon"/>
+              <p className='sound-button-text'>N E W</p>
             </button>
             <div id='configure-test-link' onClick={this.toggleDisplay}>
-                <FontAwesomeIcon icon={faSlidersH} rotation={90} size="2x" id="configure-link-icon"/>
+                <FontAwesomeIcon icon={faCog} rotation={90} size="2x" id="configure-link-icon"/>
             </div>
           </div>
           <div id='QuizUI'>
@@ -901,12 +906,6 @@ class Test extends React.Component {
                   init = {this.state.init}
                   />
           </div>
-        </div>
-        <div id='bottom-links'>
-          <NavLink to='/' className='nav-link'>
-            <FontAwesomeIcon icon={faHome} size='lg' className='sound-icon' style={{color: 'black'}} id='home-icon'/>
-          </NavLink>
-          <p className='header-text' id='by-line-p-test'><a rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line-test' className='link'>About the Author</a></p>
         </div>
       </div>
     );
