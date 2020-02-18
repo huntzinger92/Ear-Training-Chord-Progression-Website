@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCaretRight, faStop, faRedoAlt, faSlidersH, faCheck, faTimes, faHome } from '@fortawesome/free-solid-svg-icons'
 import * as THREE from "three";
 import './index.scss'
 
@@ -242,10 +244,6 @@ function App() {
   return (
     <div id='all-container'>
       <Router >
-        <div id='nav-bar'>
-            <NavLink to='/' className='nav-link'>Home</NavLink>
-            <NavLink to='/test' className='nav-link'>Test</NavLink>
-        </div>
         <Switch id='settings-or-test'>
           <Route path='/test'>
             <Test/>
@@ -261,14 +259,52 @@ function App() {
 
 function Home() {
   return (
-    <div id='header'>
+    <div id='home-wrapper'>
       <div id='header-wrapper'>
         <h3 className='headers' id='title'> A Comprehensive Chord Progression Ear Trainer</h3>
-        <p className='header-text'>This website is meant to help you become able to identify a wide variety of chord progressions by ear. Chord progressions are randomly generated from the settings you
-        have chosen on the left. Every chord progression plays the tonic (the one chord) first, as a reference. Just choose your settings and hit the Play or Get New Chords
-        buttons to get started! - <a id='personal-website' rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line'><em>Trevor Smith</em></a></p>
-        <p className='header-text'>If you are still struggling with the theory behind chord types and their symbols, you can find a thorough explanation of them <a rel="noopener noreferrer" target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'><strong>here</strong></a>.</p>
       </div>
+      <div id='description'>
+        <p className='header-text'>This website is meant to help you become able to identify a wide variety of chord progressions by ear. You are quizzed on chord progressions
+        that are randomly generated from settings you can adjust. Every chord progression plays the tonic (the one chord) first, as an aural reference. Just hit the "Start Test" button below
+        to get started!</p>
+      </div>
+        <div id='explanation'>
+          <p className='explanation-text'>In any given key or mode, there are seven chords you can make, each one based on one note of the scale. The names of these chords come from which note of
+          the scale they are based on (known as <em>scale degrees</em>), expressed as a roman numeral. The <em>quality</em> of the chord (major, minor, etc.) determines whether
+          or not the roman numeral is uppercase or lowercase, and which symbols may need to be added.</p>
+          <div id='example'>
+            <p className='explanation-text'>Take a look at the chord chart for major key triads below:</p>
+            <div id='example-grid'>
+              <p id='example-degree'>Scale Degree</p>
+              <p id='example-1'>1</p>
+              <p id='example-2'>2</p>
+              <p id='example-3'>3</p>
+              <p id='example-4'>4</p>
+              <p id='example-5'>5</p>
+              <p id='example-key'>Key of C Major</p>
+              <p id='example-C'>C</p>
+              <p id='example-D'>Dm</p>
+              <p id='example-E'>Em</p>
+              <p id='example-F'>F</p>
+              <p id='example-G'>G</p>
+              <p id='example-numeral'>Roman Numeral</p>
+              <p id='example-I'>I</p>
+              <p id='example-ii'>ii</p>
+              <p id='example-iii'>iii</p>
+              <p id='example-IV'>IV</p>
+              <p id='example-V'>V</p>
+            </div>
+            <p className='explanation-text'>If we want to refer to a chord based off of the fifth <em>scale degree</em> in the key of C major, we simply write "V". The roman numeral is capitalized because the
+            chord is major, when constructed from the notes of the C major scale. For the same reason, the three chord ("iii") is minor and therefore lowercase. You can find a comprehensive
+            list of chord types and their respective symbols <a rel="noopener noreferrer" target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'className='link'><strong>here</strong></a>.</p>
+          </div>
+        </div>
+
+        <NavLink to='/test' className='nav-link' id='start-the-test'>
+          <FontAwesomeIcon icon={faCaretRight} size="2x" className='sound-icon'/>
+          <p>Start Test</p>
+        </NavLink>
+        <p className='header-text' id='by-line-p'><a rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line' className='link'>About the Author</a></p>
     </div>
   );
 }
@@ -314,7 +350,7 @@ class Test extends React.Component {
     this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
     this.detuneValue = 0; //used to detune audio to enable transpositions
     this.count = 0; //count will be used to keep track of how many chords have played, function playMusic clears intervalID when count === this.state.amount
-    this.chordsAllowed = [soundbank[0], soundbank[3], soundbank[4]]; //used to generate random chord progressions, initialized with 1,4,5 in major
+    this.chordsAllowed = [soundbank[0], soundbank[3], soundbank[4]]; //used to generate random chord progressions, to be initialized with 1,4,5 in major soundbank[3], soundbank[4]
   };
 
   componentDidUpdate() {
@@ -335,7 +371,14 @@ class Test extends React.Component {
     };
   };
 
+  componentDidMount() {
+    this.handleClick();
+  }
+
   toggleDisplay() {
+    if (this.state.displaySettings) {
+      this.handleClick();
+    };
     this.setState({
       displaySettings: !this.state.displaySettings
     });
@@ -482,7 +525,6 @@ class Test extends React.Component {
       init: true,
       stop: true
     });
-
     var modal = this.state.modal;
     var tempChord = soundbank.find(function(obj) {
       var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved in original soundbank
@@ -499,7 +541,7 @@ class Test extends React.Component {
       this.setState({
         allowedList: tempAllowedList
       });
-      var modal = this.state.modal;
+      //var modal = this.state.modal;
       var tempChord = {};
       Object.assign(tempChord, soundbank.find(function(obj) { //deep copy, necessary to avoid mutating soundbank
         var tempName = (obj.name + modal) % 7; //when users are using modes/minor, they will be selecting chord names with respect to a different one than how the names are saved
@@ -553,7 +595,7 @@ class Test extends React.Component {
       init: true,
       chords: [],
       stop: true
-    });
+    }, () => this.handleClick());
   };
 
   handleStop() {
@@ -666,22 +708,23 @@ class Test extends React.Component {
     return (
       <div id='test-wrapper'>
         <div id='settings-wrapper' style={{display: this.state.displaySettings ? 'block' : 'none'}}>
-          <div id='configure-test-header' onClick={this.toggleDisplay}>
+          <div id='configure-test-header'>
             <h2>
-            <svg version="1.1" id="configure" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	           viewBox="0 0 43.73 36.41" xmlSpace="preserve">
-             <g>
-	            <rect x="7.71" y="5.03" width="4.11" height="26.72"/>
-	            <rect x="19.92" y="5.03" width="4.11" height="26.72"/>
-	            <rect x="32.14" y="5.03" width="4.11" height="26.72"/>
-	            <rect x="31.43" y="18.89" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 58.5102 -9.8721)" width="5.53" height="10.85"/>
-	            <rect x="19.21" y="6.13" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 33.5347 -10.419)" width="5.53" height="10.85"/>
-	            <rect x="7" y="14.99" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 30.181 10.656)" width="5.53" height="10.85"/>
-              </g>
-            </svg>
-            <span id='configure-test-header-text'>Start Test</span>
-          </h2>
+              <svg version="1.1" id="configure" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+              viewBox="0 0 43.73 36.41" xmlSpace="preserve">
+                <g>
+                  <rect x="7.71" y="5.03" width="4.11" height="26.72"/>
+                  <rect x="19.92" y="5.03" width="4.11" height="26.72"/>
+                  <rect x="32.14" y="5.03" width="4.11" height="26.72"/>
+                  <rect x="31.43" y="18.89" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 58.5102 -9.8721)" width="5.53" height="10.85"/>
+                  <rect x="19.21" y="6.13" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 33.5347 -10.419)" width="5.53" height="10.85"/>
+                  <rect x="7" y="14.99" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 30.181 10.656)" width="5.53" height="10.85"/>
+                </g>
+              </svg>
+              <span id='configure-test-header-text'>Configure Test</span>
+            </h2>
           </div>
+          <div id='options-wrapper'>
           <h3 className='settings-label' id='mode-key'>Mode/Key:</h3>
           <select className='settings-dropdown' onChange={this.handleTypeChange} id='type-selection'>
             <optgroup label='Keys'>
@@ -698,7 +741,7 @@ class Test extends React.Component {
             </optgroup>
           </select>
           <h3 className='settings-label'>Amount of Chords:</h3>
-          <select className='settings-dropdown'onChange={this.handleAmountChange} id='amount-selection'>
+          <select className='settings-dropdown'onChange={this.handleAmountChange} id='amount-selection' value={this.state.amount}>
             <option value={2}>2</option>
             <option value={3}>3</option>
             <option value={4}>4</option>
@@ -710,33 +753,47 @@ class Test extends React.Component {
           <div id='allowed-wrapper'>
             <h3 id='allowed-header' className='settings-label'>Allowed Chords:</h3>
             <div id='allowed-selections'>
-              <div className='checkbox'>
-                <input className='actual-checkbox' type='checkbox' id='allowed-section-1' checked disabled></input>
-                <label htmlFor='allowed-selection-1'>1</label>
+              <div className='allowed-checkbox-wrapper' id='div-allowed-selection-1'>
+                <label htmlFor='allowed-selection-1' className='allowed-label'>
+                  <input className='allowed-checkbox' type='checkbox' disabled checked></input>
+                  <span className='allowed-span'>1</span>
+                </label>
               </div>
-              <div className='checkbox'>
-                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={2} id='allowed-selection-2'></input>
-                <label htmlFor='allowed-selection-2'>2</label>
+              <div className='allowed-checkbox-wrapper' id='div-allowed-selection-2'>
+                <label htmlFor='allowed-selection-2' className='allowed-label'>
+                  <input className='allowed-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={2} id='allowed-selection-2'></input>
+                  <span className='allowed-span'>2</span>
+                </label>
               </div>
-              <div className='checkbox'>
-                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={3} id='allowed-selection-3'></input>
-                <label htmlFor='allowed-selection-3'>3</label>
+              <div className='allowed-checkbox-wrapper' id='div-allowed-selection-3'>
+                <label htmlFor='allowed-selection-3' className='allowed-label'>
+                  <input className='allowed-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={3} id='allowed-selection-3'></input>
+                  <span className='allowed-span'>3</span>
+                </label>
               </div>
-              <div className='checkbox'>
-                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={4} id='allowed-selection-4'></input>
-                <label htmlFor='allowed-selection-4'>4</label>
+              <div className='allowed-checkbox-wrapper' id='div-allowed-selection-4'>
+                <label htmlFor='allowed-selection-4' className='allowed-label'>
+                  <input className='allowed-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={4} id='allowed-selection-4' defaultChecked={true}></input>
+                  <span className='allowed-span'>4</span>
+                </label>
               </div>
-              <div className='checkbox'>
-                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={5} id='allowed-selection-5'></input>
-                <label htmlFor='allowed-selection-5'>5</label>
+              <div className='allowed-checkbox-wrapper' id='div-allowed-selection-5'>
+                <label htmlFor='allowed-selection-5' className='allowed-label'>
+                  <input className='allowed-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={5} id='allowed-selection-5' defaultChecked={true}></input>
+                  <span className='allowed-span'>5</span>
+                </label>
               </div>
-              <div className='checkbox'>
-                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={6} id='allowed-selection-6'></input>
-                <label htmlFor='allowed-selection-6'>6</label>
+              <div className='allowed-checkbox-wrapper' id='div-allowed-selection-6'>
+                <label htmlFor='allowed-selection-6' className='allowed-label'>
+                  <input className='allowed-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={6} id='allowed-selection-6'></input>
+                  <span className='allowed-span'>6</span>
+                </label>
               </div>
-              <div className='checkbox'>
-                <input className='actual-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={7} id='allowed-selection-7'></input>
-                <label htmlFor='allowed-selection-7'>7</label>
+              <div className='allowed-checkbox-wrapper' id='div-allowed-selection-7'>
+                <label htmlFor='allowed-selection-7' className='allowed-label'>
+                  <input className='allowed-checkbox' type='checkbox' onClick={(event) => this.handleChordAllowedChange(event)} value={7} id='allowed-selection-7'></input>
+                  <span className='allowed-span'>7</span>
+                </label>
               </div>
             </div>
           </div>
@@ -751,7 +808,7 @@ class Test extends React.Component {
                   <rect x="7.63" y="7.18" width="2.08" height="19.12"/>
                   <polygon points="4.75,8.4 8.67,4.48 12.6,8.4 "/>
                 </svg>
-              Allow Transpositions</label>
+              <span className='settings-text'>Allow Transpositions</span></label>
             </div>
             <div className='checkbox'>
               <input type="checkbox" id="allow-inversions" name="allow-inversions" onChange={this.handleInversions}></input>
@@ -767,7 +824,7 @@ class Test extends React.Component {
 		                c0,4.28,2.32,8.13,5.78,9.58L10.81,26.25z"/>
                  </g>
                 </svg>
-              Allow Inversions</label>
+              <span className='settings-text'>Allow Inversions</span></label>
             </div>
             <div className='checkbox'>
               <input type="checkbox" id="use-seventh-chords" name="use-seventh-chords" onChange={(event) => this.handleSeventhChords(event)}></input>
@@ -780,7 +837,7 @@ class Test extends React.Component {
 			                c0,0.26,0,0.52,0.01,0.75h-1.96C21.52,11.88,21.81,10.37,22.38,8.88z"/>
 	               </g>
                 </svg>
-              Use Seventh Chords</label>
+              <span className='settings-text'>Use Seventh Chords</span></label>
             </div>
             <div className='checkbox'>
               <input type="checkbox" id="loop" name="loop" onChange={this.handleLoop}></input>
@@ -794,7 +851,7 @@ class Test extends React.Component {
                       c2.13,0,3.87,2.02,3.87,4.5v3.98C22.62,15.44,20.88,17.46,18.74,17.46z"/>
                   </g>
                 </svg>
-                Loop Chord Playback</label>
+                <span className='settings-text'>Loop Chord Playback</span></label>
             </div>
             <div className='checkbox'>
               <input type='checkbox' id='displayPossible' name='displayPossible' onChange={this.handleDisplayPossible}></input>
@@ -808,31 +865,31 @@ class Test extends React.Component {
                   </g>
                   <circle cx="13.89" cy="14.16" r="5.41"/>
                 </svg>
-                Display All Possible Chords</label>
+                <span className='settings-text'>Display All Possible Chords</span></label>
             </div>
+          </div>
+          <div id='start-test-header' onClick={this.toggleDisplay}>
+            <FontAwesomeIcon icon={faCaretRight} className='sound-icon' size="3x"/>
+            <h2>Start Test</h2>
+          </div>
           </div>
         </div>
         <div id='quiz-wrapper' style={{display: this.state.displaySettings ? 'none' : 'grid'}}>
-        <div id='configure-test-header' onClick={this.toggleDisplay}>
-          <h2>
-          <svg version="1.1" id="configure" className='settings-icon' xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-           viewBox="0 0 43.73 36.41" xmlSpace="preserve">
-           <g>
-            <rect x="7.71" y="5.03" width="4.11" height="26.72"/>
-            <rect x="19.92" y="5.03" width="4.11" height="26.72"/>
-            <rect x="32.14" y="5.03" width="4.11" height="26.72"/>
-            <rect x="31.43" y="18.89" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 58.5102 -9.8721)" width="5.53" height="10.85"/>
-            <rect x="19.21" y="6.13" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 33.5347 -10.419)" width="5.53" height="10.85"/>
-            <rect x="7" y="14.99" transform="matrix(-1.836970e-16 1 -1 -1.836970e-16 30.181 10.656)" width="5.53" height="10.85"/>
-            </g>
-          </svg>
-          <span id='configure-test-header-text'>Configure Test</span>
-        </h2>
-        </div>
           <div id='sound-button-wrapper'>
-  		      <button id='play' className='sound-button' onClick={this.handleClick}>Play</button>
-            <button id='stop' className='sound-button' onClick={this.handleStop}>Stop</button>
-            <button id='get-new-chords' className='sound-button' onClick={this.handleGetNewChords}>Get New Chords</button>
+  		      <button id='play' className='sound-button' onClick={this.handleClick}>
+              <FontAwesomeIcon icon={faCaretRight} size="3x" className="sound-icon"/>
+              <p className='sound-button-text'>P L A Y</p>
+            </button>
+            <button id='stop' className='sound-button' onClick={this.handleStop}>
+              <FontAwesomeIcon icon={faStop} size="2x" className="sound-icon"/>
+              <p className='sound-button-text'>S T O P</p>
+            </button>
+            <button id='get-new-chords' className='sound-button' onClick={this.handleGetNewChords}>
+              <FontAwesomeIcon icon={faRedoAlt} size="2x" className="sound-icon"/>
+            </button>
+            <div id='configure-test-link' onClick={this.toggleDisplay}>
+                <FontAwesomeIcon icon={faSlidersH} rotation={90} size="2x" id="configure-link-icon"/>
+            </div>
           </div>
           <div id='QuizUI'>
             <QuizUI chords = {this.state.chords}
@@ -845,6 +902,12 @@ class Test extends React.Component {
                   />
           </div>
         </div>
+        <div id='bottom-links'>
+          <NavLink to='/' className='nav-link'>
+            <FontAwesomeIcon icon={faHome} size='lg' className='sound-icon' style={{color: 'black'}} id='home-icon'/>
+          </NavLink>
+          <p className='header-text' id='by-line-p-test'><a rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line-test' className='link'>About the Author</a></p>
+        </div>
       </div>
     );
   };
@@ -852,14 +915,57 @@ class Test extends React.Component {
 
 function CorrectButton(props) {
   if (Number(props.value) === 0) {
-    return <button className='chord-button correct' id='given-one-chord' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)} disabled>{props.chordName}</button>;
+    return (
+      <div className="div-chord-button">
+        <button className='chord-button correct' id='given-one-chord' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)} disabled>
+          <p>{props.chordName}</p>
+          <FontAwesomeIcon icon={faCheck} className='chord-icon check'/>
+        </button>
+      </div>
+    );
   } else {
-    return <button className={props.clicked ? 'chord-button correct' : 'chord-button unanswered'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>;
+    if (props.clicked) {
+      return (
+        <div className="div-chord-button">
+          <button className='chord-button correct' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
+            <p>{props.chordName}</p>
+            <FontAwesomeIcon icon={faCheck} className='chord-icon check'/>
+          </button>
+        </div>
+      );
+    } else {
+      return (
+        <div className="div-chord-button">
+          <button className='chord-button unanswered' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
+            <p>{props.chordName}</p>
+            <FontAwesomeIcon icon={faCheck} className='chord-icon check' style={{opacity: 0}}/>
+          </button>;
+        </div>
+      );
+    };
   };
 };
 
 function IncorrectButton(props) {
-  return <button className={props.clicked ? 'chord-button incorrect' : 'chord-button unanswered'} value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>{props.chordName}</button>
+  if (props.clicked) {
+    return (
+      <div className="div-chord-button">
+        <button className='chord-button incorrect' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
+          <p>{props.chordName}</p>
+          <FontAwesomeIcon icon={faTimes} className='chord-icon x'/>
+        </button>
+      </div>
+    );
+  } else {
+      return (
+        <div className="div-chord-button">
+          <button className='chord-button unanswered' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
+            <p>{props.chordName}</p>
+            <FontAwesomeIcon icon={faTimes} className='chord-icon x' style={{opacity: 0}}/>
+          </button>
+        </div>
+      );
+  };
 };
 
 class QuizUI extends React.Component {
