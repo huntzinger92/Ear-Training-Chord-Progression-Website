@@ -938,7 +938,7 @@ function CorrectButton(props) {
           <button className='chord-button unanswered' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
             <p>{props.chordName}</p>
             <FontAwesomeIcon icon={faCheck} className='chord-icon check' style={{opacity: 0}}/>
-          </button>;
+          </button>
         </div>
       );
     };
