@@ -473,6 +473,7 @@ button {
   font-size: 18px;
   p {
     display: inline;
+    pointer-events: none;
   }
 }
 
@@ -480,6 +481,7 @@ button {
   align-self: center;
   position: absolute;
   margin-left: 5px;
+  pointer-events: none;
 }
 
 .correct {

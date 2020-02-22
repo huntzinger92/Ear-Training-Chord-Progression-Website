@@ -925,8 +925,8 @@ function CorrectButton(props) {
   } else {
     if (props.clicked) {
       return (
-        <div className="div-chord-button">
-          <button className='chord-button correct' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
+        <div className="div-chord-button" onClick={(e) => props.makeClicked(e)}>
+          <button className='chord-button correct' value={props.value} key={props.value} >
             <p>{props.chordName}</p>
             <FontAwesomeIcon icon={faCheck} className='chord-icon check'/>
           </button>
@@ -936,14 +936,15 @@ function CorrectButton(props) {
       return (
         <div className="div-chord-button">
           <button className='chord-button unanswered' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
-            <p>{props.chordName}</p>
-            <FontAwesomeIcon icon={faCheck} className='chord-icon check' style={{opacity: 0}}/>
+            <p onClick={(e) => console.log('chordname clicked')}>{props.chordName}</p>
+            <FontAwesomeIcon icon={faCheck} className='chord-icon check' style={{opacity: 0}} onClick={(e) => console.log('fontAwesomeIcon clicked')}/>
           </button>
         </div>
       );
     };
   };
 };
+
 
 function IncorrectButton(props) {
   if (props.clicked) {
