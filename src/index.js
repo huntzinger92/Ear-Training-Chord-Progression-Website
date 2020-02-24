@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCaretRight, faStop, faRedoAlt, faSlidersH, faCheck, faTimes, faHome, faCog } from '@fortawesome/free-solid-svg-icons'
 import * as THREE from "three";
-import './index.scss'
+import './index.scss';
 
 import {
   BrowserRouter as Router,
