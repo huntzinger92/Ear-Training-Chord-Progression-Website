@@ -1,6 +1,24 @@
-/*Holt stuff, to be fully integrated later*/
 optgroup, option {
   font-size: 18px;
+}
+
+#paypal-container {
+  width: 65%;
+  margin: auto;
+  margin-top: 20px;
+  text-align: center;
+  padding: 0px 45px 10px 45px;
+  border: 1px solid black;
+  border-radius: 10px;
+}
+
+#paypal-header {
+  margin-bottom: 8px;
+}
+
+#paypal-button-container {
+  width: 65%;
+  margin: auto;
 }
 
 #start-the-test {
@@ -282,7 +300,7 @@ optgroup, option {
   border-radius: 10px;
   width: 65%;
   margin: auto;
-  margin-bottom: 35px;
+  margin-bottom: 0px;
   padding-top: 10px;
   padding-left: 45px;
   padding-right: 45px;

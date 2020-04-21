@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCaretRight, faStop, faRedoAlt, faSlidersH, faCheck, faTimes, faHome, faCog } from '@fortawesome/free-solid-svg-icons'
+import { PayPalButton } from "react-paypal-button-v2";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCaretRight, faStop, faRedoAlt, faSlidersH, faCheck, faTimes, faHome, faCog } from '@fortawesome/free-solid-svg-icons';
 import * as THREE from "three";
 import './index.scss';
 
@@ -203,8 +204,9 @@ const soundbank = [
   }
 ];
 
+//receives chord object, outputs formatted string for quality
 function intToChordName(chord) {
-  //chord needs to be a chord object from soundbank
+  //chord object has to have props identical to the ones in soundbank
   var name = '';
   if (chord.name === 1) {
     name = 'i';
@@ -240,14 +242,38 @@ function intToChordName(chord) {
   return name;
 };
 
+function PaypalUI() {
+  return (
+    <div id='paypal-container'>
+      <h2 id='paypal-header'>Enjoy this app? Consider donating!</h2>
+      <div id='paypal-button-container'>
+        <PayPalButton
+          amount="5.00"
+          shippingPreference="NO_SHIPPING"
+          style={{
+            clientId: 'AVwHied3bwMBGZ5X3uIptxMrNgn8Cef-41w0POmgAoylRqDscnpV2KSOIKYS-uRaRFLV6RtkEC_Ahqee',
+            layout: 'horizontal',
+            color: 'blue',
+            shape: 'pill',
+            tagline: false,
+            height: 35
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
 function App() {
+  //if you want to a Donate view
+  //<NavLink to='/donate' className='nav-links'>Donate</NavLink> (don't forget to add relevant part to switch)
   return (
     <div id='all-container'>
       <Router>
         <div id='nav-bar'>
           <NavLink to='/' className='nav-links'>Home</NavLink>
           <NavLink to='/test' className='nav-links'>Test</NavLink>
-          <a rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line' className='nav-links'>About</a>
+          <a rel="noopener noreferrer" target='_blank' href='https://www.trevorspheresmith.com/' id='by-line' className='nav-links'>About the Author</a>
         </div>
         <Switch id='settings-or-test'>
           <Route path='/test'>
@@ -261,6 +287,14 @@ function App() {
     </div>
   );
 }
+
+function Donate() {
+  return (
+    <div>
+      <p>Donate Page goes here</p>
+    </div>
+  );
+};
 
 function Home() {
   return (
@@ -304,7 +338,7 @@ function Home() {
             list of chord types and their respective symbols <a rel="noopener noreferrer" target='_blank' href='https://en.wikipedia.org/wiki/Chord_names_and_symbols_(popular_music)'className='link'><strong>here</strong></a>.</p>
           </div>
         </div>
-
+        <PaypalUI/>
         <NavLink to='/test' className='nav-link' id='start-the-test'>
           <FontAwesomeIcon icon={faCaretRight} size="2x" className='sound-icon'/>
           <p>Start Test</p>
@@ -313,6 +347,8 @@ function Home() {
   );
 }
 
+//this component contains both settings and view of quiz ui, whose displays are toggled by clicking on settings icon. It contains logic for changing settings, generating chords, and start/stopping sound
+//the quiz buttons and logic for styling them are contained in child component QuizUI
 class Test extends React.Component {
   constructor(props) {
     super(props);
@@ -341,7 +377,7 @@ class Test extends React.Component {
     this.handleSeventhChords = this.handleSeventhChords.bind(this);
     this.handleLoop = this.handleLoop.bind(this);
     this.handleChordAllowedChange = this.handleChordAllowedChange.bind(this);
-    this.handleClick = this.handleClick.bind(this);
+    this.playSound = this.playSound.bind(this);
     this.handleGetNewChords = this.handleGetNewChords.bind(this);
     this.handleStop = this.handleStop.bind(this);
     this.handleDisplayPossible = this.handleDisplayPossible.bind(this);
@@ -349,6 +385,7 @@ class Test extends React.Component {
     this.toggleDisplay = this.toggleDisplay.bind(this);
     //variables with "global" access (within component)
     this.timeout = 0; //id to hold timeout on playMusic calls, to be cleared on this.state.stop (note: just initialized with an integer, used as a timeout object)
+    //three functions below
     this.listener = new THREE.AudioListener();
     this.audioLoader = new THREE.AudioLoader();
     this.sound = 0; //used to temporarily hold each chord to be played (need access within playMusic and componentDidUpdate)
@@ -358,9 +395,10 @@ class Test extends React.Component {
   };
 
   componentDidUpdate() {
-    if (this.state.chords.length === Number(this.state.amount) && this.state.play) { //if there are the correct amount of generated chords and play is set to true
-      this.renderMusic();
-    };
+    //this is commented out as an experiment to get rid of laggy playback bug. this.renderMusic is called as a callback to setState at the end of this.getChords()
+    //if (this.state.chords.length === Number(this.state.amount) && this.state.play) { //if there are the correct amount of generated chords and play is set to true
+      //this.renderMusic();
+    //};
     if (this.state.stop) {
       if (this.sound) {
         this.sound.stop();
@@ -376,12 +414,14 @@ class Test extends React.Component {
   };
 
   componentDidMount() {
-    this.handleClick();
+    //on initial component load, get chords and play sound, render buttons for first "question"
+    this.playSound();
   }
 
   toggleDisplay() {
     if (this.state.displaySettings) {
-      this.handleClick();
+      //when going to quiz view (away from settings), play sound
+      this.playSound();
     };
     this.setState({
       displaySettings: !this.state.displaySettings
@@ -390,6 +430,7 @@ class Test extends React.Component {
 
   //HANDLERS FOR SETTING CHANGES
 
+  //handles major/minor/modal settings changes
   handleTypeChange(e) {
     var tempAllowedList = this.state.allowedList; //ensure global access within function
     var modal;
@@ -437,22 +478,26 @@ class Test extends React.Component {
     };
   };
 
+  //amount of chords change
   handleAmountChange(e) {
     this.setState({
       amount: e.target.value,
       init: true,
       play: false,
-      chords: [], //clearing out chords, note that this is important for the path of processing with handleClick
+      chords: [], //clearing out chords, note that this is important for the path of processing with playSound
       stop: true
     });
   };
 
+
+  //transposition settings change
   handleTranspositions() {
     this.setState({
       transpositions: !this.state.transpositions
     });
   };
 
+  //allow/disallow inversion
   handleInversions() {
     if (!this.state.inversions && (this.state.chords.length > 0)) { //if inversions have just been allowed and we already have chords
       var chordList = this.state.chords; //to avoid mutating state directly
@@ -499,6 +544,7 @@ class Test extends React.Component {
     });
   };
 
+  //allow/disallow seventh chords
   handleSeventhChords(e) {
     if (e.target.checked) {
       this.setState({
@@ -517,12 +563,14 @@ class Test extends React.Component {
     };
   };
 
+  //allow/disallow loop
   handleLoop() {
     this.setState({
       loop: !this.state.loop
     });
   };
 
+  //allow/disallow individual chords
   handleChordAllowedChange(e) {
     this.setState({ //clear out chords because we need a new set, set init to true for processing purposes elsewhere
       chords: [],
@@ -573,6 +621,7 @@ class Test extends React.Component {
     };
   };
 
+  //display/hide all possible chords in the given key/mode (note that these are formatted for chord qaulity)
   handleDisplayPossible() {
     this.setState({
       displayPossible: !this.state.displayPossible
@@ -581,7 +630,7 @@ class Test extends React.Component {
 
   //SOUND BUTTONS
 
-  handleClick() {
+  playSound() {
     this.setState({
       play: true,
       stop: false
@@ -599,7 +648,7 @@ class Test extends React.Component {
       init: true,
       chords: [],
       stop: true
-    }, () => this.handleClick());
+    }, () => this.playSound());
   };
 
   handleStop() {
@@ -610,7 +659,7 @@ class Test extends React.Component {
   };
 
   getChords() {
-    var tempChordHolder = [{}];
+    var tempChordHolder = [{}]; //this.state.chords will become tempChordHolder at the end of the function, just a list to hold onto chords as they are randomly chosen
     Object.assign(tempChordHolder[0], soundbank[(7 - this.state.modal) % 7]); //makes a deep copy to avoid mutating original soundbank
     tempChordHolder[0].name = 1; //initialize first chord with root position and value with name 1
     tempChordHolder[0].src = tempChordHolder[0][this.state.chordClass].root.src;
@@ -655,9 +704,11 @@ class Test extends React.Component {
 
     this.setState({
       chords: tempChordHolder
-    });
+      }, () => this.renderMusic()
+    );
   };
 
+  //handles some state setting dependent on various conditions and then calls this.playMusic, which generates the sound of chosen chords directly
   renderMusic() {
     this.setState({
       play: false
@@ -674,7 +725,10 @@ class Test extends React.Component {
     this.playMusic(this.state.amount);
   };
 
+  //responsible for initiating sound
   playMusic(totalChordsPlayed) {
+    console.log('this.state.chords:');
+    console.log(this.state.chords);
     if (this.listener.context.state === 'suspended') {
       this.listener.context.resume();
     };
@@ -686,6 +740,7 @@ class Test extends React.Component {
       }
     } else if (this.count >= 0 && !this.state.stop) {
       var url = this.state.chords[this.count].src;
+      //three function here
       this.sound = new THREE.Audio(this.listener);
       if (this.state.transpositions) {
         this.sound.detune = this.detuneValue;
@@ -880,7 +935,7 @@ class Test extends React.Component {
         </div>
         <div id='quiz-wrapper' style={{display: this.state.displaySettings ? 'none' : 'grid'}}>
           <div id='sound-button-wrapper'>
-  		      <button id='play' className='sound-button' onClick={this.handleClick}>
+  		      <button id='play' className='sound-button' onClick={this.playSound}>
               <FontAwesomeIcon icon={faCaretRight} size="3x" className="sound-icon"/>
               <p className='sound-button-text'>P L A Y</p>
             </button>
@@ -912,6 +967,7 @@ class Test extends React.Component {
   };
 };
 
+//component generates a clickable button with chord name displayed, will change green with a checkmark on click
 function CorrectButton(props) {
   if (Number(props.value) === 0) {
     return (
@@ -945,7 +1001,7 @@ function CorrectButton(props) {
   };
 };
 
-
+//will generate a clickable button with chord name displayed, will become red and show an x when clicked
 function IncorrectButton(props) {
   if (props.clicked) {
     return (
@@ -968,6 +1024,8 @@ function IncorrectButton(props) {
   };
 };
 
+//responsible for the clickable button portion of the quiz view (everything from "Possible Chords:" display down)
+//handles the generation of incorrect answers and renering of button rows, functional components above are children of QuizUI (note only 3 buttons per row if limited allowed chords)
 class QuizUI extends React.Component {
   constructor(props) {
     super(props);
@@ -1102,6 +1160,7 @@ class QuizUI extends React.Component {
             )
           }
       </div>
+      <PaypalUI/>
     </div>
     );
   };
