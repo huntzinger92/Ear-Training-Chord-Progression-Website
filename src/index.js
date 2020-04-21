@@ -402,7 +402,13 @@ class Test extends React.Component {
     //};
     if (this.state.stop) {
       if (this.sound) {
-        this.sound.stop();
+        //Safari struggles with stopping sound that has already finished playback, so this is for you, Saf
+        try {
+          this.sound.stop();
+        }
+        catch(error) {
+          //do nothing
+        };
       };
       if (this.timeout) {
         clearTimeout(this.timeout); //stops the playMusic cycle
@@ -728,8 +734,8 @@ class Test extends React.Component {
 
   //responsible for initiating sound
   playMusic(totalChordsPlayed) {
-    console.log('this.state.chords:');
-    console.log(this.state.chords);
+    //console.log('this.state.chords:');
+    //console.log(this.state.chords);
     if (this.listener.context.state === 'suspended') {
       this.listener.context.resume();
     };
@@ -760,6 +766,7 @@ class Test extends React.Component {
       };
 
     } else {
+      alert('Whoops, something went terribly wrong on our end. Try it again, once more, with feeling.');
       console.log('A variable named this.count is less than 0. Something terrible has occured. Please refresh the page and pretend this never happened.');
     };
   };
@@ -993,8 +1000,8 @@ function CorrectButton(props) {
       return (
         <div className="div-chord-button">
           <button className='chord-button unanswered' value={props.value} key={props.value} onClick={(e) => props.makeClicked(e)}>
-            <p onClick={(e) => console.log('chordname clicked')}>{props.chordName}</p>
-            <FontAwesomeIcon icon={faCheck} className='chord-icon check' style={{opacity: 0}} onClick={(e) => console.log('fontAwesomeIcon clicked')}/>
+            <p>{props.chordName}</p>
+            <FontAwesomeIcon icon={faCheck} className='chord-icon check' style={{opacity: 0}}/>
           </button>
         </div>
       );
