@@ -251,13 +251,14 @@ function PaypalUI() {
           amount="5.00"
           shippingPreference="NO_SHIPPING"
           style={{
-            clientId: 'AVwHied3bwMBGZ5X3uIptxMrNgn8Cef-41w0POmgAoylRqDscnpV2KSOIKYS-uRaRFLV6RtkEC_Ahqee',
+            mode: 'live',
             layout: 'horizontal',
             color: 'blue',
             shape: 'pill',
             tagline: false,
             height: 35
           }}
+          options={{clientId: 'AVwHied3bwMBGZ5X3uIptxMrNgn8Cef-41w0POmgAoylRqDscnpV2KSOIKYS-uRaRFLV6RtkEC_Ahqee'}}
         />
       </div>
     </div>
