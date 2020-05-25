@@ -36,7 +36,7 @@ const soundbank = [
       },
       inverted: {
         value: 7,
-        src: './chords/major_seventh_chords/Cmaj7_root.mp3'
+        src: './chords/major_seventh_chords/Cmaj7_inv.mp3'
       }
     }
   },
@@ -346,7 +346,7 @@ function Home() {
         </NavLink>
     </div>
   );
-}
+};
 
 //this component contains both settings and view of quiz ui, whose displays are toggled by clicking on settings icon. It contains logic for changing settings, generating chords, and start/stopping sound
 //the quiz buttons and logic for styling them are contained in child component QuizUI
